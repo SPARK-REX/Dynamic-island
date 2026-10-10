@@ -67,6 +67,9 @@ Inside the expanded island, scroll your mouse wheel or swipe your trackpad to cy
 
 ---
 
+live demo 
+https://eclectic-fudge-7ca7c2.netlify.app
+
 ## 🚀 Installation & Setup
 
 ### Prerequisites & Runtime Requirements
