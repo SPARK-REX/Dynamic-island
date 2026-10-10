@@ -1,13 +1,13 @@
 # Dynamic Island for Windows 🏝️
 
-[![Build & Test](https://github.com/SPARK-REX/Dynamic-island-for-windows/actions/workflows/build.yml/badge.svg)](https://github.com/SPARK-REX/Dynamic-island-for-windows/actions/workflows/build.yml)
+[![Build & Test](https://github.com/SPARK-REX/Dynamic-island/actions/workflows/build.yml/badge.svg)](https://github.com/SPARK-REX/Dynamic-island/actions/workflows/build.yml)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20(x64)-0078D6?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![UI Framework](https://img.shields.io/badge/UI-WPF%20%2B%20DirectX%20Vectors-FF6F00)](https://github.com/dotnet/wpf)
 [![Audio](https://img.shields.io/badge/Audio-NAudio%20%2B%20WASAPI-26A69A)](https://github.com/naudio/NAudio)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A fluid, ultra-responsive, and lightweight **Dynamic Island** overlay for Windows 10 and Windows 11. Built with **C#**, **.NET 10**, and **WPF vector geometry**, it brings Apple's iconic morphing island experience to desktop Windows with native media control, volume HUD, focus timers, camera/mic privacy indicators, and toast notifications.
+A fluid, ultra-responsive, and lightweight **Dynamic Island** overlay for Windows 10 and Windows 11. Built with **C#**, **.NET 10**, and **WPF vector geometry**, it brings Apple's iconic morphing island experience to desktop Windows with native media control, volume HUD, focus timers, camera/mic privacy indicators, freeform dragging with edge docking, and toast notifications.
 
 ---
 
@@ -43,6 +43,11 @@ Inside the expanded island, scroll your mouse wheel or swipe your trackpad to cy
 ### 🔔 Toast & Push Notifications
 - Intercepts system push notifications and displays an elegant morphing pill with the app icon/badge, sender title, and message snippet.
 
+### 🎯 Freeform Dragging & Edge Snapping
+- **Freely Draggable:** Click and drag the island anywhere on your display or multi-monitor setup to position it wherever you like.
+- **Smart Edge Docking:** Dragging near screen borders automatically rotates and docks the island along top, bottom, or side edges.
+- **⚡ Instant Re-center (Double-Click):** Double-click anywhere on the island to instantly reset its orientation and snap it right back to top-center!
+
 ### ⚡ Extreme Performance & Low Footprint
 - **Backdrop Blur:** the island blurs whatever is behind it (Windows 10 2004+). Hidden from screenshots/screen recording as a side effect.
 - **Direct Geometry Animation:** Driven directly by vector math on `RectangleGeometry` rather than layout reflows, ensuring buttery 120+ FPS animations on high-refresh monitors.
@@ -54,21 +59,22 @@ Inside the expanded island, scroll your mouse wheel or swipe your trackpad to cy
 
 ## 🎮 Gestures & Controls
 
+> [!TIP]
+> 🎯 **Highlight: Instant Re-Center via Double-Click**  
+> You can freely drag and dock the island anywhere across your monitors. Whenever you want to bring it back to its default location, simply **double-click anywhere on the island** to immediately reset its rotation and snap it back to **top-center**!
+
 | Action | Gesture / Input | Description |
 |---|---|---|
-| **Re-center Island** | **Double-click the island** | Instantly resets the island and snaps it back to top-center |
+| **Re-center Island** | ⚡ **Double-click the island** | **Instantly resets rotation and snaps back to top-center** |
+| **Move / Drag Island** | Left-click + drag anywhere | Freely position the island anywhere on your monitor |
+| **Snap & Dock to Edges** | Drag near top, bottom, or side borders | Docks the island along any screen border with adapted orientation |
 | **Expand Media Card** | Hover cursor over the island | Reveals full album art, track details, and playback controls |
 | **Cycle Views (Expanded)** | Mouse wheel / 2-finger scroll | Smoothly switches between Now Playing, Focus Timer, and Big Clock |
 | **Open Music App** | Left-click on media card | Focuses or restores the active audio application (Spotify, Chrome, etc.) |
-| **Move / Drag Island** | Left-click + drag anywhere | Freely position the island anywhere on your monitor |
-| **Snap & Dock to Edges** | Drag near top or bottom borders | Docks the island along the screen border with adapted orientation |
 | **Adjust Focus Timer** | `↑` / `↓` (±1 min), `←` / `→` (±5 min) | Quick stepper adjustment via keyboard or mouse wheel |
 | **Tray Context Menu** | Right-click the system tray icon | Access presets, clock formats, startup toggle, and settings |
 
 ---
-
-live demo 
-https://keen-panda-f5b329.netlify.app
 
 ## 🚀 Installation & Setup
 
@@ -89,7 +95,7 @@ Dynamic Island is built on **.NET 10**. Choose your preferred installation optio
 
 ### Option 1: Download from GitHub Releases (Recommended for Users)
 
-1. Download the latest release `.zip` from [GitHub Releases](https://github.com/SPARK-REX/Dynamic-island-for-windows/releases).
+1. Download the latest release `.zip` from [GitHub Releases](https://github.com/SPARK-REX/Dynamic-island/releases).
 2. Extract the archive to any folder of your choice (e.g. `C:\Tools\DynamicIsland`).
 3. Double-click **`DynamicIsland.exe`** (or `run.bat`).
 
@@ -110,8 +116,8 @@ Dynamic Island is built on **.NET 10**. Choose your preferred installation optio
 
 1. **Clone the repository:**
    ```cmd
-   git clone https://github.com/SPARK-REX/Dynamic-island-for-windows.git
-   cd Dynamic-island-for-windows
+   git clone https://github.com/SPARK-REX/Dynamic-island.git
+   cd Dynamic-island
    ```
 
 2. **Run the automated setup script:**
@@ -161,7 +167,7 @@ Right-click the **Dynamic Island** tray icon in your Windows Taskbar system tray
 ## 📂 Repository Structure
 
 ```text
-Dynamic-island-for-windows/
+Dynamic-island/
 ├── .github/workflows/       # GitHub Actions CI automated build & test workflow
 ├── docs/                    # Installation and Contributing documentation
 │   ├── INSTALLATION.md      # Detailed setup, SmartScreen & permissions guide
@@ -211,7 +217,7 @@ Dynamic Island stores lightweight user preferences and error diagnostics in:
 
 Developed by **Akhin (SPARK-REX)**:
 - GitHub: [@SPARK-REX](https://github.com/SPARK-REX)
-- Repository: [Dynamic-island-for-windows](https://github.com/SPARK-REX/Dynamic-island-for-windows)
+- Repository: [Dynamic-island](https://github.com/SPARK-REX/Dynamic-island)
 
 ---
 
