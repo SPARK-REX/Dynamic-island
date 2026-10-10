@@ -1,0 +1,23 @@
+﻿<!--
+====================================================================================================
+Author: Akhin (SPARK-REX)
+GitHub: https://github.com/SPARK-REX
+Project: Dynamic Island for Windows
+====================================================================================================
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DynamicIsland.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,56 @@
+<!--
+====================================================================================================
+Author: Akhin (SPARK-REX)
+GitHub: https://github.com/SPARK-REX
+Project: Dynamic Island for Windows
+====================================================================================================
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>DynamicIsland</RootNamespace>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>false</TieredPGO>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <NuGetAudit>false</NuGetAudit>
+    <ApplicationIcon>assets\app.ico</ApplicationIcon>
+    <Authors>Akhin (SPARK-REX)</Authors>
+    <Company>Akhin (SPARK-REX)</Company>
+    <Product>Dynamic Island for Windows</Product>
+    <RepositoryUrl>https://github.com/SPARK-REX/Dynamic-island-for-windows</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/SPARK-REX</PackageProjectUrl>
+    <Copyright>Copyright (c) 2026 Akhin (SPARK-REX)</Copyright>
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**;publish\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="assets\app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <EmbeddedResource Include="assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+    <RuntimeHostConfigurationOption Include="System.GC.RetainVM" Value="false" />
+    <RuntimeHostConfigurationOption Include="System.GC.Server" Value="false" />
+    <RuntimeHostConfigurationOption Include="System.Threading.ThreadPool.MinThreads" Value="2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DynamicIsland.Tests" />
+  </ItemGroup>
+
+</Project>
