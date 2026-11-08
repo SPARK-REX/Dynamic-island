@@ -1,0 +1,116 @@
+<!--
+====================================================================================================
+Author: Akhin (SPARK-REX)
+GitHub: https://github.com/SPARK-REX
+Project: Dynamic Island for Windows
+Native WPF push-to-talk hotkey picker popup.
+Unslop: quiet graphite surfaces, one accent only on Apply, hairline borders,
+no colored glows, 4px spacing grid.
+====================================================================================================
+-->
+<Window x:Class="DynamicIsland.HotkeyPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nixi Island — Hotkey Picker"
+        Width="640" Height="480"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        Background="#111318"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="False"
+        KeyDown="OnPickerKeyDown">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#0D0F14" MouseLeftButtonDown="OnTitlebarMouseDown">
+            <Grid>
+                <TextBlock Text="Hotkey picker" VerticalAlignment="Center" Margin="14,0,0,0"
+                           Foreground="#E8EAF2" FontWeight="Normal" FontSize="13"/>
+                <Button Content="✕" Style="{StaticResource TitleBtnClose}" HorizontalAlignment="Right" Click="OnCancelClick" ToolTip="Close"/>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24">
+            <StackPanel>
+                <Border Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Current binding" Style="{StaticResource CardTitle}"/>
+                            <TextBlock Text="The key currently assigned to push to talk." Style="{StaticResource CardDesc}"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" CornerRadius="10" Background="#1E2128" BorderBrush="#2A2E38" BorderThickness="1" Padding="10,8" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtCurrent" Text="[Caps Lock]" Foreground="#E8EAF2" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Presets" Style="{StaticResource CardTitle}"/>
+                        <TextBlock Text="Pick a preset, or capture a custom key / combo below." Style="{StaticResource CardDesc}"/>
+                        <WrapPanel Margin="0,12,0,0">
+                            <Button Content="[Caps Lock]" Tag="[Caps Lock];20;0" Style="{StaticResource Chip}" Click="OnPresetClick" FontFamily="Consolas"/>
+                            <Button Content="[Ctrl + Space]" Tag="[Ctrl + Space];32;17" Style="{StaticResource Chip}" Click="OnPresetClick" FontFamily="Consolas"/>
+                            <Button Content="[Alt + V]" Tag="[Alt + V];86;18" Style="{StaticResource Chip}" Click="OnPresetClick" FontFamily="Consolas"/>
+                            <Button Content="[Mouse 4]" Tag="[Mouse 4];5;0" Style="{StaticResource Chip}" Click="OnPresetClick" FontFamily="Consolas"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Capture custom key" Style="{StaticResource CardTitle}"/>
+                                <TextBlock x:Name="TxtStatus" Text="Turn on capture, then press 1 key." Style="{StaticResource CardDesc}"/>
+                            </StackPanel>
+                            <CheckBox x:Name="TglCapture" Grid.Column="1" Style="{StaticResource Switch}" Click="OnCaptureClick" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Key mode: Single key vs Combo -->
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Key type" Style="{StaticResource CardTitle}" FontSize="13"/>
+                                <TextBlock Text="Single key (1 key) or Combo (modifier + key, 2 keys)." Style="{StaticResource CardDesc}" FontSize="12" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                <RadioButton x:Name="RadModeSingle" GroupName="HotkeyType" Tag="single" Content="Single key" Style="{StaticResource Pill}" IsChecked="True" Checked="OnModeChecked"/>
+                                <RadioButton x:Name="RadModeCombo" GroupName="HotkeyType" Tag="combo" Content="Combo (2 keys)" Style="{StaticResource Pill}" Checked="OnModeChecked"/>
+                            </WrapPanel>
+                        </Grid>
+
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="New binding:" Foreground="#6E7686" FontSize="12" VerticalAlignment="Center"/>
+                            <Border Grid.Column="1" CornerRadius="10" Background="#111318" BorderBrush="#2A2E38" BorderThickness="1" Padding="10,8" Margin="8,0">
+                                <TextBlock x:Name="TxtPreview" Text="—" Foreground="#E8EAF2" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button x:Name="BtnApply" Content="Apply" Style="{StaticResource AccentBtn}" Click="OnApplyClick" IsEnabled="False"/>
+                                <Button Content="Cancel" Style="{StaticResource Chip}" Click="OnCancelClick" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

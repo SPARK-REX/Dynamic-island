@@ -25,32 +25,35 @@ Project: Dynamic Island for Windows
     <Authors>Akhin (SPARK-REX)</Authors>
     <Company>Akhin (SPARK-REX)</Company>
     <Product>Dynamic Island for Windows</Product>
-    <RepositoryUrl>https://github.com/SPARK-REX/Dynamic-island-for-windows</RepositoryUrl>
+    <RepositoryUrl>https://github.com/SPARK-REX/Dynamic-island</RepositoryUrl>
     <PackageProjectUrl>https://github.com/SPARK-REX</PackageProjectUrl>
     <Copyright>Copyright (c) 2026 Akhin (SPARK-REX)</Copyright>
-    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**;publish\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**;publish\**;release_package\**;website\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="assets\app.ico">
+    <EmbeddedResource Include="assets\app.ico" />
+    <None Update="assets\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <EmbeddedResource Include="assets\app.ico" />
+    <None Update="gemini.key" Condition="Exists('gemini.key')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="gemini.key.example">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
     <RuntimeHostConfigurationOption Include="System.GC.RetainVM" Value="false" />
     <RuntimeHostConfigurationOption Include="System.GC.Server" Value="false" />
-    <RuntimeHostConfigurationOption Include="System.Threading.ThreadPool.MinThreads" Value="2" />
+    <RuntimeHostConfigurationOption Include="System.Threading.ThreadPool.MinThreads" Value="4" />
+    <RuntimeHostConfigurationOption Include="System.Windows.Media.DisableMultimonitorDisplayClipping" Value="true" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+    <PackageReference Include="System.Speech" Version="10.0.14" />
   </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="DynamicIsland.Tests" />
-  </ItemGroup>
-
 </Project>

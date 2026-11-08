@@ -1,4 +1,4 @@
-﻿// ====================================================================================================
+// ====================================================================================================
 // Author: Akhin (SPARK-REX)
 // GitHub: https://github.com/SPARK-REX
 // Project: Dynamic Island for Windows
@@ -17,10 +17,14 @@ public partial class MainWindow
 {
     private bool _privacyActive;
 
-    private void CheckPrivacy()
+    public void CheckPrivacy()
     {
-        var (mic, cam) = PrivacyService.CheckHardwareAccess();
 
+        bool mic = false, cam = false;
+        if (!_settingsService.MascotEnabled || _settingsService.MascotPrivacyIndicatorsEnabled)
+        {
+            (mic, cam) = PrivacyService.CheckHardwareAccess();
+        }
         MicDot.Visibility = mic ? Visibility.Visible : Visibility.Collapsed;
         CamDot.Visibility = cam ? Visibility.Visible : Visibility.Collapsed;
 
@@ -66,10 +70,24 @@ public partial class MainWindow
     }
 
     private int? AskMinutes() => TimerDialog.Ask(_setMin);
+    public void StartFocusTimerFromSettings() => StartTimer(_setMin);
+
+    public int? OpenCustomFocusTimer()
+    {
+        var minutes = AskMinutes();
+        if (minutes is int value) StartTimer(value);
+        return minutes;
+    }
 
     /// <summary>Expand into a notification card for a few seconds, then shrink back.</summary>
-    private void Notify(string title, string text, string? app = null, double hold = 5)
+    public void Notify(string title, string text, string? app = null, double hold = 5)
     {
+        if (_mode != Mode.Notify)
+        {
+            _preNotifyMode = _mode;
+            _preNotifyView = _view;
+        }
+
         NotifyTitle.Text = string.IsNullOrWhiteSpace(title) ? "Notification" : title;
         NotifyText.Text = string.IsNullOrWhiteSpace(text) ? "New message received" : text;
 

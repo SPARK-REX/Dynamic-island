@@ -1,10 +1,3 @@
-﻿<!--
-====================================================================================================
-Author: Akhin (SPARK-REX)
-GitHub: https://github.com/SPARK-REX
-Project: Dynamic Island for Windows
-====================================================================================================
--->
 <Window x:Class="DynamicIsland.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -86,6 +79,65 @@ Project: Dynamic Island for Windows
                                 <Setter TargetName="bg" Property="Background" Value="#55FFFFFF"/>
                                 <Setter TargetName="bg" Property="BorderBrush" Value="#E0FFFFFF"/>
                                 <!-- press: quick squish; release: springy return -->
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Flat Media Icon Button (Shuffle, Prev, Next, Repeat) -->
+        <Style x:Key="MediaIconBtn" TargetType="Button">
+            <Setter Property="local:Tactile.Enabled" Value="True"/>
+            <Setter Property="local:Tactile.HoverScale" Value="1.14"/>
+            <Setter Property="local:Tactile.PressScale" Value="0.88"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Distinctive Circular White Play/Pause Button (OLED Hardware Specular Pop) -->
+        <Style x:Key="MediaPlayCircleBtn" TargetType="Button">
+            <Setter Property="local:Tactile.Enabled" Value="True"/>
+            <Setter Property="local:Tactile.HoverScale" Value="1.06"/>
+            <Setter Property="local:Tactile.PressScale" Value="0.90"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="circleBg" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}"
+                                CornerRadius="18"
+                                Background="#FFFFFF" BorderThickness="0"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="8" ShadowDepth="1.5" Direction="270" Opacity="0.30" Color="#000000"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="circleBg" Property="Background" Value="#F2F2F7"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="circleBg" Property="Background" Value="#E5E5EA"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -283,9 +335,18 @@ Project: Dynamic Island for Windows
     <Grid x:Name="Root" MouseEnter="OnIslandEnter" MouseLeave="OnIslandLeave">
 
         <!-- Solid black island -->
-        <Path x:Name="IslandShape" Width="440" Height="160"
+        <Path x:Name="IslandShape" Width="440" Height="160" RenderTransformOrigin="0.5,0.203125"
               HorizontalAlignment="Left" VerticalAlignment="Top"
-              Fill="Black" Stroke="#26FFFFFF" StrokeThickness="1">
+              Fill="Black" StrokeThickness="1">
+            <Path.RenderTransform><ScaleTransform x:Name="IslandBreathScale"/></Path.RenderTransform>
+            <Path.Stroke>
+                <!-- Glass rim: bright specular top edge, faint at the bottom -->
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#99FFFFFF" Offset="0"/>
+                    <GradientStop Color="#33FFFFFF" Offset="0.5"/>
+                    <GradientStop Color="#0DFFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Path.Stroke>
             <Path.Effect>
                 <DropShadowEffect BlurRadius="14" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.35"/>
             </Path.Effect>
@@ -294,14 +355,18 @@ Project: Dynamic Island for Windows
             </Path.Data>
         </Path>
 
-        <!-- Smoke tint over the blurred backdrop (shown only when backdrop blur is active) -->
-        <Path x:Name="IslandTint" Width="440" Height="160" Visibility="Collapsed" IsHitTestVisible="False"
+        <!-- Glass sheen over the blurred backdrop (shown only when backdrop blur is active):
+             white specular at the top, clear in the middle, gentle dark at the bottom for text contrast -->
+        <Path x:Name="IslandTint" Width="440" Height="160" Visibility="Collapsed" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.203125"
               HorizontalAlignment="Left" VerticalAlignment="Top"
               Data="{Binding Data, ElementName=IslandShape}">
+            <Path.RenderTransform><ScaleTransform x:Name="IslandTintBreathScale"/></Path.RenderTransform>
             <Path.Fill>
                 <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                    <GradientStop Color="#A612121A" Offset="0"/>
-                    <GradientStop Color="#C80A0A10" Offset="1"/>
+                    <GradientStop Color="#24FFFFFF" Offset="0"/>
+                    <GradientStop Color="#0AFFFFFF" Offset="0.45"/>
+                    <GradientStop Color="#00FFFFFF" Offset="0.7"/>
+                    <GradientStop Color="#2E0D0D14" Offset="1"/>
                 </LinearGradientBrush>
             </Path.Fill>
         </Path>
@@ -445,42 +510,266 @@ Project: Dynamic Island for Windows
             <Grid x:Name="MediaPanel" Width="400" Height="136"
                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"
                   Opacity="0" IsHitTestVisible="False">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="80"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
 
-                <StackPanel x:Name="MediaTop" Orientation="Horizontal" Margin="20,16,20,0">
-                    <!-- Album art as a brush so the rounded corners are respected -->
-                    <Border Width="64" Height="64" CornerRadius="12" BorderBrush="#40FFFFFF" BorderThickness="1.2">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Direction="270" Opacity="0.35" Color="#000000"/>
-                        </Border.Effect>
-                        <Border.Background>
-                            <ImageBrush x:Name="Art" Stretch="UniformToFill"/>
-                        </Border.Background>
-                    </Border>
-                    <StackPanel Width="276" Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock x:Name="TitleText" Foreground="White" FontSize="16"
-                                   FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock x:Name="ArtistText" Foreground="#B3FFFFFF" FontSize="13"
-                                   TextTrimming="CharacterEllipsis"/>
+                <!-- Dynamic Island Music Control (Matches Mockup with Top Mascot) -->
+
+                <Grid x:Name="MediaMusicView" Width="368" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,48,0,0">
+
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="Auto"/>
+
+                        <RowDefinition Height="Auto"/>
+
+                    </Grid.RowDefinitions>
+
+
+
+                    <!-- Row 0: Rounded-Square Album Art + Title/Artist + Playback Controls -->
+
+                    <Grid Grid.Row="0">
+
+                        <Grid.ColumnDefinitions>
+
+                            <ColumnDefinition Width="Auto"/>
+
+                            <ColumnDefinition Width="*"/>
+
+                            <ColumnDefinition Width="Auto"/>
+
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <!-- Album Art: Rounded Square (CornerRadius=8) -->
+
+                        <Border Grid.Column="0" Width="42" Height="42" CornerRadius="8" ClipToBounds="True"
+
+                                BorderBrush="#26FFFFFF" BorderThickness="0.8" Cursor="Hand" ToolTip="Open media player"
+
+                                MouseLeftButtonDown="OnOpenSourceClick" VerticalAlignment="Center">
+
+                            <Border.Effect>
+
+                                <DropShadowEffect BlurRadius="8" ShadowDepth="1.5" Direction="270" Opacity="0.35" Color="#000000"/>
+
+                            </Border.Effect>
+
+                            <Grid>
+
+                                <Border x:Name="ArtFallback" CornerRadius="8" Background="#161B26">
+
+                                    <TextBlock Text="&#xE787;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+
+                                               FontSize="18" Foreground="#829BFF" Opacity="0.75"
+
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                </Border>
+
+                                <Rectangle x:Name="ArtRect" RadiusX="8" RadiusY="8" Visibility="Collapsed">
+
+                                    <Rectangle.Fill>
+
+                                        <ImageBrush x:Name="Art" Stretch="UniformToFill"/>
+
+                                    </Rectangle.Fill>
+
+                                </Rectangle>
+
+                            </Grid>
+
+                        </Border>
+
+
+
+                        <!-- Track Title & Artist -->
+
+                        <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center" Cursor="Hand"
+
+                                    ToolTip="Open media player" MouseLeftButtonDown="OnOpenSourceClick">
+
+                            <TextBlock x:Name="TitleText" Text="Track Title" Foreground="White" FontSize="13.5"
+
+                                       FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="195"
+
+                                       VerticalAlignment="Center"/>
+
+                            <TextBlock x:Name="ArtistText" Text="Artist Name" Foreground="#8E8E93"
+
+                                       FontSize="11.5" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" MaxWidth="195"/>
+
+                        </StackPanel>
+
+
+
+                        <!-- Right: Playback Controls (Prev, Play/Pause, Next) -->
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+
+                            <!-- Prev Button -->
+
+                            <Button x:Name="PrevBtn" Style="{StaticResource MediaIconBtn}" Width="28" Height="28" Margin="0,0,4,0"
+
+                                    VerticalAlignment="Center"
+
+                                    Click="OnPrev" ToolTip="Previous track" AutomationProperties.Name="Previous track">
+
+                                <TextBlock Text="&#xE892;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+
+                                           FontSize="13" Foreground="#6B7C96" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            </Button>
+
+
+
+                            <!-- Play/Pause Button -->
+
+                            <Button x:Name="PlayPauseBtn" Style="{StaticResource MediaIconBtn}" Width="32" Height="32" Margin="0,0,4,0"
+
+                                    VerticalAlignment="Center"
+
+                                    Click="OnPlayPause" ToolTip="Play / Pause" AutomationProperties.Name="Play or pause">
+
+                                <TextBlock x:Name="PlayGlyph" Text="&#xE769;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+
+                                           FontSize="16" FontWeight="Bold" Foreground="#829BFF"
+
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            </Button>
+
+
+
+                            <!-- Next Button -->
+
+                            <Button x:Name="NextBtn" Style="{StaticResource MediaIconBtn}" Width="28" Height="28"
+
+                                    VerticalAlignment="Center"
+
+                                    Click="OnNext" ToolTip="Next track" AutomationProperties.Name="Next track">
+
+                                <TextBlock Text="&#xE893;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+
+                                           FontSize="13" Foreground="#6B7C96" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                            </Button>
+
+                        </StackPanel>
+
+                    </Grid>
+
+
+
+                    <!-- Row 1: Scrub Progress Bar & Timestamps -->
+
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+
+                        <Grid.ColumnDefinitions>
+
+                            <ColumnDefinition Width="Auto"/>
+
+                            <ColumnDefinition Width="*"/>
+
+                            <ColumnDefinition Width="Auto"/>
+
+                        </Grid.ColumnDefinitions>
+
+
+
+                        <!-- Elapsed Timestamp -->
+
+                        <TextBlock x:Name="ElapsedText" Grid.Column="0" Text="0:00" Foreground="#8E8E93" FontSize="10.5"
+
+                                   FontFamily="Segoe UI, Consolas" Typography.NumeralAlignment="Tabular"
+
+                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+
+
+                        <!-- Interactive Scrub Track with Soft Periwinkle Fill (#829BFF) -->
+
+                        <Grid x:Name="ProgressBarContainer" Grid.Column="1" Height="14" VerticalAlignment="Center"
+
+                              Background="Transparent" Cursor="Hand"
+
+                              MouseLeftButtonDown="OnProgressMouseDown" MouseMove="OnProgressMouseMove"
+
+                              MouseLeftButtonUp="OnProgressMouseUp">
+
+                            <Border x:Name="ProgressBarTrack" Height="3.5" CornerRadius="1.75"
+
+                                    Background="#26FFFFFF" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+
+                            <Border x:Name="ProgressFill" Height="3.5" CornerRadius="1.75"
+
+                                    Background="#829BFF" HorizontalAlignment="Left" VerticalAlignment="Center"
+
+                                    Width="100"/>
+
+                        </Grid>
+
+
+
+                        <!-- Duration / Remaining Timestamp -->
+
+                        <TextBlock x:Name="DurationText" Grid.Column="2" Text="-0:00" Foreground="#8E8E93" FontSize="10.5"
+
+                                   FontFamily="Segoe UI, Consolas" Typography.NumeralAlignment="Tabular"
+
+                                   VerticalAlignment="Center" Margin="10,0,0,0"/>
+
+                    </Grid>
+
+
+
+                    <!-- Legacy and backward-compatibility elements (Hidden) -->
+
+                    <StackPanel Visibility="Collapsed">
+
+                        <Button x:Name="ShuffleBtn"><TextBlock x:Name="ShuffleGlyph"/></Button>
+
+                        <Button x:Name="RepeatBtn"><TextBlock x:Name="RepeatGlyph"/></Button>
+
+                        <Border x:Name="OutputDevicePill"><TextBlock x:Name="OutputDeviceText"/></Border>
+
+                        <Border x:Name="CenterDragGrip"/>
+
+                        <Button x:Name="MusicVolMinBtn"><TextBlock x:Name="MusicVolMinGlyph"/></Button>
+
+                        <Grid x:Name="MusicVolSliderContainer">
+
+                            <Border x:Name="MusicVolTrack"/>
+
+                            <Border x:Name="MusicVolFill"/>
+
+                            <Border x:Name="MusicVolThumb">
+
+                                <Border.RenderTransform><ScaleTransform x:Name="MusicVolThumbScale"/></Border.RenderTransform>
+
+                                <Border.Effect><DropShadowEffect x:Name="MusicVolThumbGlow"/></Border.Effect>
+
+                            </Border>
+
+                        </Grid>
+
+                        <Button x:Name="MusicVolMaxBtn"/>
+
+                        <Rectangle><Rectangle.RenderTransform><ScaleTransform x:Name="EB1"/></Rectangle.RenderTransform></Rectangle>
+
+                        <Rectangle><Rectangle.RenderTransform><ScaleTransform x:Name="EB2"/></Rectangle.RenderTransform></Rectangle>
+
+                        <Rectangle><Rectangle.RenderTransform><ScaleTransform x:Name="EB3"/></Rectangle.RenderTransform></Rectangle>
+
+                        <Rectangle><Rectangle.RenderTransform><ScaleTransform x:Name="EB4"/></Rectangle.RenderTransform></Rectangle>
+
                     </StackPanel>
-                </StackPanel>
 
-                <StackPanel x:Name="MediaCtl" Grid.Row="1" Orientation="Horizontal"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <!-- Segoe Fluent glyphs: E892 previous, E893 next -->
-                    <Button Style="{StaticResource Ctl}" Content="&#xE892;" Click="OnPrev"
-                            AutomationProperties.Name="Previous track"/>
-                    <Button Style="{StaticResource Ctl}" Click="OnPlayPause"
-                            AutomationProperties.Name="Play or pause">
-                        <!-- E768 play / E769 pause, swapped from code -->
-                        <TextBlock x:Name="PlayGlyph" Text="&#xE768;"/>
-                    </Button>
-                    <Button Style="{StaticResource Ctl}" Content="&#xE893;" Click="OnNext"
-                            AutomationProperties.Name="Next track"/>
-                </StackPanel>
+                </Grid>
+
+
+
+
 
                 <!-- Scroll-wheel view 2: set / watch the focus timer. -->
                 <StackPanel x:Name="TimerView" Grid.RowSpan="2" Visibility="Hidden"
@@ -723,7 +1012,7 @@ Project: Dynamic Island for Windows
             <!-- Notification card: app badge + title + message. Shown by Mode.Notify. -->
             <Grid x:Name="NotifyPanel" Width="360" Height="70"
                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"
-                  Opacity="0" IsHitTestVisible="False">
+                  Opacity="0" IsHitTestVisible="False" Cursor="Hand" ToolTip="Click to dismiss">
                 <StackPanel Orientation="Horizontal" Margin="14,0,20,0" VerticalAlignment="Center">
                     <Border x:Name="NotifyBadge" Width="42" Height="42" CornerRadius="11" Background="#45384252"
                             BorderBrush="#40FFFFFF" BorderThickness="1">
@@ -838,7 +1127,170 @@ Project: Dynamic Island for Windows
                 </StackPanel>
             </Grid>
 
+            <!-- ===== PIN TARGET PANEL (App Drag-to-Pin Activation) ===== -->
+            <Grid x:Name="PinPanel" Width="280" Height="34"
+                  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"
+                  Opacity="0" IsHitTestVisible="False">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Luminous Pin Jewel Icon with Specular Ring -->
+                <Border x:Name="PinBadge" Width="22" Height="22" CornerRadius="7" Margin="8,0,0,0"
+                        VerticalAlignment="Center">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#FFB300" Offset="0"/>
+                            <GradientStop Color="#FF8F00" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect x:Name="PinBadgeGlow" BlurRadius="8" ShadowDepth="0" Color="#FFB300" Opacity="0.75"/>
+                    </Border.Effect>
+                    <TextBlock x:Name="PinBadgeGlyph" Text="&#xE840;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                               FontSize="11.5" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Center: Prompt Title ("Drag here to pin" -> "Drop to pin on top") -->
+                <TextBlock x:Name="PinPromptTitle" Grid.Column="1" Text="Drag here to pin"
+                           Foreground="White" FontSize="12.5" FontWeight="SemiBold"
+                           FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"
+                           Margin="8,0,4,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                <!-- Right: High-Precision Target App Pill Badge -->
+                <Border x:Name="PinTargetPill" Grid.Column="2" CornerRadius="8" Padding="7,2" Margin="0,0,8,0"
+                        VerticalAlignment="Center" Background="#26FFFFFF" BorderBrush="#45FFFFFF" BorderThickness="1">
+                    <TextBlock x:Name="PinTargetAppName" Text="Window" Foreground="#E2E8F0" FontSize="11"
+                               FontWeight="Medium" FontFamily="Segoe UI Variable Text, Segoe UI, sans-serif"
+                               TextTrimming="CharacterEllipsis" MaxWidth="90"/>
+                </Border>
+            </Grid>
+
+            <Grid x:Name="MascotPanel" Width="102" Height="53" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Opacity="0" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5"><Grid.RenderTransform><ScaleTransform x:Name="MascotFadeScale" ScaleX="0.9" ScaleY="0.9"/></Grid.RenderTransform>
+                <Canvas x:Name="MascotHeadphones" Width="76" Height="38" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" IsHitTestVisible="False">
+                    <Canvas.CacheMode>
+                        <BitmapCache SnapsToDevicePixels="False" EnableClearType="False"/>
+                    </Canvas.CacheMode>
+                    <Canvas.Effect>
+                        <DropShadowEffect BlurRadius="5" ShadowDepth="0" Color="#829BFF" Opacity="0.6"/>
+                    </Canvas.Effect>
+                    <Canvas.RenderTransform>
+                        <TranslateTransform x:Name="MascotHeadphonesBob"/>
+                    </Canvas.RenderTransform>
+                    <!-- Inner mesh canopy -->
+                    <Path Data="M 11,11.5 C 14,2 62,2 65,11.5" Stroke="#829BFF" StrokeThickness="1.4" Opacity="0.75" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    
+                    <!-- Outer stainless steel arch -->
+                    <Path Data="M 8,11 C 11,-1 65,-1 68,11" Stroke="#F1F5F9" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+
+                    <!-- Hinge connectors -->
+                    <Border Canvas.Left="6" Canvas.Top="9" Width="4" Height="3.5" CornerRadius="1.2" Background="#CBD5E1"/>
+                    <Border Canvas.Left="66" Canvas.Top="9" Width="4" Height="3.5" CornerRadius="1.2" Background="#CBD5E1"/>
+
+                    <!-- Left Earcup Shell -->
+                    <Border Canvas.Left="3.5" Canvas.Top="11.5" Width="8.5" Height="17.5" CornerRadius="4.25" BorderBrush="#829BFF" BorderThickness="1.2">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#40507D" Offset="0"/>
+                                <GradientStop Color="#1C2338" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border Width="2.5" Height="7" CornerRadius="1.2" Background="#A6B6FF" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.85"/>
+                    </Border>
+
+                    <!-- Left Earcup Inner Cushion -->
+                    <Border Canvas.Left="10" Canvas.Top="13" Width="2.5" Height="14.5" CornerRadius="1.2" Background="#D1DCFF" Opacity="0.95"/>
+
+                    <!-- Right Earcup Shell -->
+                    <Border Canvas.Left="64" Canvas.Top="11.5" Width="8.5" Height="17.5" CornerRadius="4.25" BorderBrush="#829BFF" BorderThickness="1.2">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#40507D" Offset="0"/>
+                                <GradientStop Color="#1C2338" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border Width="2.5" Height="7" CornerRadius="1.2" Background="#A6B6FF" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.85"/>
+                    </Border>
+
+                    <!-- Right Earcup Inner Cushion -->
+                    <Border Canvas.Left="63.5" Canvas.Top="13" Width="2.5" Height="14.5" CornerRadius="1.2" Background="#D1DCFF" Opacity="0.95"/>
+                </Canvas>
+                <Canvas x:Name="MascotShades" Width="52" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" IsHitTestVisible="False"><Canvas.RenderTransform><TranslateTransform x:Name="MascotShadesMove"/></Canvas.RenderTransform>
+                    <Border Canvas.Left="0" Canvas.Top="3" Width="16" Height="13" CornerRadius="4" Background="#A8343C58" BorderBrush="#FF829BFF" BorderThickness="1.2"><Path Data="M 3,2 L 7,2 L 3,7" Stroke="#99FFFFFF" StrokeThickness="0.8"/></Border>
+                    <Border Canvas.Left="36" Canvas.Top="3" Width="16" Height="13" CornerRadius="4" Background="#A8343C58" BorderBrush="#FF829BFF" BorderThickness="1.2"><Path Data="M 3,2 L 7,2 L 3,7" Stroke="#99FFFFFF" StrokeThickness="0.8"/></Border>
+                    <Path Data="M 16,9 Q 26,5 36,9" Stroke="#FF829BFF" StrokeThickness="1.2"/>
+                </Canvas>
+                <Canvas x:Name="MascotBow" Width="20" Height="14" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="72,12,0,0" Visibility="Collapsed" IsHitTestVisible="False"><Canvas.RenderTransform><TranslateTransform x:Name="MascotBowMove"/></Canvas.RenderTransform>
+                    <Path Data="M 9,7 C 5,0 1,1 2,5 C 2,8 5,9 9,8 Z" Fill="#FFFF70A8"/>
+                    <Path Data="M 10,7 C 14,0 18,1 17,5 C 17,8 14,9 10,8 Z" Fill="#FFFF70A8"/>
+                    <Ellipse Canvas.Left="8" Canvas.Top="5" Width="4" Height="4" Fill="#FFFF9BC2"/>
+                </Canvas>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,4,0,0">
+                    <Border x:Name="MascotEyeLeftShape" Width="9" Height="15" CornerRadius="8" Background="#829BFF" Margin="0,0,24,0"><Border.Effect><DropShadowEffect x:Name="MascotEyeLeftGlow" BlurRadius="10" ShadowDepth="0" Color="#829BFF" Opacity="0.9"/></Border.Effect><Border.RenderTransform><TranslateTransform x:Name="MascotEyeLeft"/></Border.RenderTransform></Border>
+                    <Border x:Name="MascotEyeRightShape" Width="9" Height="15" CornerRadius="8" Background="#829BFF"><Border.Effect><DropShadowEffect x:Name="MascotEyeRightGlow" BlurRadius="10" ShadowDepth="0" Color="#829BFF" Opacity="0.9"/></Border.Effect><Border.RenderTransform><TranslateTransform x:Name="MascotEyeRight"/></Border.RenderTransform></Border>
+                </StackPanel>
+                <StackPanel x:Name="MascotSmileEyes" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed" IsHitTestVisible="False">
+                    <Path x:Name="MascotSmileLeftShape" Width="9" Height="8" Data="M 1,7 Q 4.5,1 8,7" Stroke="#829BFF" StrokeThickness="2.0" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Margin="0,0,19,0">
+                        <Path.Effect><DropShadowEffect x:Name="MascotSmileLeftGlow" BlurRadius="16" ShadowDepth="0" Color="#829BFF" Opacity="1"/></Path.Effect>
+                        <Path.RenderTransform><TranslateTransform x:Name="MascotSmileLeft"/></Path.RenderTransform>
+                    </Path>
+                    <Path x:Name="MascotSmileRightShape" Width="9" Height="8" Data="M 1,7 Q 4.5,1 8,7" Stroke="#829BFF" StrokeThickness="2.0" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                        <Path.Effect><DropShadowEffect x:Name="MascotSmileRightGlow" BlurRadius="16" ShadowDepth="0" Color="#829BFF" Opacity="1"/></Path.Effect>
+                        <Path.RenderTransform><TranslateTransform x:Name="MascotSmileRight"/></Path.RenderTransform>
+                    </Path>
+                </StackPanel>
+                <Canvas x:Name="MascotSleepZ" Width="24" Height="29" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,1,12,0" Opacity="0" IsHitTestVisible="False">
+                    <TextBlock x:Name="MascotSleepZ1" Canvas.Left="0" Canvas.Top="18" Text="z" Foreground="#9AAEFF" FontSize="9" FontWeight="SemiBold"><TextBlock.RenderTransform><TranslateTransform x:Name="MascotSleepZ1Move"/></TextBlock.RenderTransform></TextBlock>
+                    <TextBlock x:Name="MascotSleepZ2" Canvas.Left="6" Canvas.Top="11" Text="z" Foreground="#9AAEFF" FontSize="12" FontWeight="SemiBold"><TextBlock.RenderTransform><TranslateTransform x:Name="MascotSleepZ2Move"/></TextBlock.RenderTransform></TextBlock>
+                    <TextBlock x:Name="MascotSleepZ3" Canvas.Left="12" Canvas.Top="4" Text="Z" Foreground="#9AAEFF" FontSize="15" FontWeight="SemiBold"><TextBlock.RenderTransform><TranslateTransform x:Name="MascotSleepZ3Move"/></TextBlock.RenderTransform></TextBlock>
+                </Canvas>
+            </Grid>
         </Grid>
+
+        <!-- Listening glow: soft ring on the mascot pill edge + bright comets circling it -->
+        <Grid x:Name="MascotListenGlow" Width="102" Height="53" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Visibility="Collapsed" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform><ScaleTransform x:Name="MascotListenGlowScale"/></Grid.RenderTransform>
+            <Rectangle x:Name="MascotGlowRing" RadiusX="26.5" RadiusY="26.5" Stroke="#829BFF" StrokeThickness="2">
+                <Rectangle.Effect><DropShadowEffect BlurRadius="14" ShadowDepth="0" Color="#829BFF" Opacity="0.9"/></Rectangle.Effect>
+            </Rectangle>
+            <Rectangle x:Name="MascotGlowComet" RadiusX="26.5" RadiusY="26.5" Stroke="#D6DEFF" StrokeThickness="2" StrokeDashArray="6 27" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                <Rectangle.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="0" Color="#FFFFFF" Opacity="0.9"/></Rectangle.Effect>
+            </Rectangle>
+        </Grid>
+
+        <!-- Listening ripple: soft rings expand outward from the pill and fade -->
+        <Grid x:Name="MascotListenRipple" Width="102" Height="53" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Visibility="Collapsed" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+            <Rectangle x:Name="MascotRipple1" RadiusX="26.5" RadiusY="26.5" Stroke="#9BB0FF" StrokeThickness="2" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                <Rectangle.RenderTransform><ScaleTransform x:Name="MascotRipple1Scale"/></Rectangle.RenderTransform>
+                <Rectangle.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="0" Color="#829BFF" Opacity="0.9"/></Rectangle.Effect>
+            </Rectangle>
+            <Rectangle x:Name="MascotRipple2" RadiusX="26.5" RadiusY="26.5" Stroke="#C9B8FF" StrokeThickness="2" Opacity="0" RenderTransformOrigin="0.5,0.5">
+                <Rectangle.RenderTransform><ScaleTransform x:Name="MascotRipple2Scale"/></Rectangle.RenderTransform>
+                <Rectangle.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="0" Color="#B79BFF" Opacity="0.9"/></Rectangle.Effect>
+            </Rectangle>
+        </Grid>
+
+        <!-- Listening rainbow: colour gradient ring that spins around the pill edge -->
+        <Grid x:Name="MascotListenRainbow" Width="102" Height="53" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Visibility="Collapsed" IsHitTestVisible="False">
+            <Rectangle x:Name="MascotRainbowRing" RadiusX="26.5" RadiusY="26.5" StrokeThickness="2.5">
+                <Rectangle.Stroke>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <LinearGradientBrush.RelativeTransform><RotateTransform x:Name="MascotRainbowRot" CenterX="0.5" CenterY="0.5"/></LinearGradientBrush.RelativeTransform>
+                        <GradientStop Color="#FF6EC7" Offset="0"/><GradientStop Color="#7AA2FF" Offset="0.3"/><GradientStop Color="#5CF2D6" Offset="0.55"/><GradientStop Color="#FFD36E" Offset="0.8"/><GradientStop Color="#FF6EC7" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Stroke>
+                <Rectangle.Effect><DropShadowEffect BlurRadius="14" ShadowDepth="0" Color="#9B8CFF" Opacity="0.8"/></Rectangle.Effect>
+            </Rectangle>
+        </Grid>
+
+        <Canvas x:Name="MascotListenWaves" Width="154" Height="53" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0" Visibility="Collapsed" IsHitTestVisible="False">
+            <Path x:Name="MascotListenWaveLeftInner" Stroke="#829BFF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 0,0"/>
+            <Path x:Name="MascotListenWaveLeftOuter" Stroke="#A6B6FF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 0,0"/>
+            <Path x:Name="MascotListenWaveRightInner" Stroke="#829BFF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 0,0"/>
+            <Path x:Name="MascotListenWaveRightOuter" Stroke="#A6B6FF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 0,0"/>
+        </Canvas>
 
         <!-- Privacy Indicator Dots (Mic = Orange, Camera = Green) -->
         <StackPanel x:Name="PrivacyPanel" Orientation="Horizontal"
@@ -858,3 +1310,12 @@ Project: Dynamic Island for Windows
         </StackPanel>
     </Grid>
 </Window>
+
+
+
+
+
+
+
+
+

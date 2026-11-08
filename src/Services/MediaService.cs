@@ -1,4 +1,4 @@
-﻿// ====================================================================================================
+// ====================================================================================================
 // Author: Akhin (SPARK-REX)
 // GitHub: https://github.com/SPARK-REX
 // Project: Dynamic Island for Windows
@@ -59,6 +59,7 @@ public sealed class MediaService : IDisposable
 
     public event Action<MediaTrackInfo>? TrackInfoChanged;
     public event Action<bool>? PlaybackStatusChanged;
+    public event Action<TimeSpan, TimeSpan>? TimelineChanged;
     public event Action? NeedRebind;
 
     public async Task InitializeAsync()
@@ -153,12 +154,20 @@ public sealed class MediaService : IDisposable
         if (_disposed) return;
         try
         {
-            if (_session != null) _session.MediaPropertiesChanged -= OnMediaPropertiesChanged;
+            if (_session != null)
+            {
+                _session.MediaPropertiesChanged -= OnMediaPropertiesChanged;
+                _session.TimelinePropertiesChanged -= OnTimelinePropertiesChanged;
+            }
             foreach (var w in _watched) w.PlaybackInfoChanged -= OnPlaybackInfoChanged;
             _watched.Clear();
 
             _session = Pick();
-            if (_session != null) _session.MediaPropertiesChanged += OnMediaPropertiesChanged;
+            if (_session != null)
+            {
+                _session.MediaPropertiesChanged += OnMediaPropertiesChanged;
+                _session.TimelinePropertiesChanged += OnTimelinePropertiesChanged;
+            }
 
             var all = _mgr?.GetSessions();
             if (all != null)
@@ -191,6 +200,24 @@ public sealed class MediaService : IDisposable
     private void OnMediaPropertiesChanged(GlobalSystemMediaTransportControlsSession s, object a)
     {
         if (!_disposed) _ = RefreshAsync(props: true, announce: true);
+    }
+
+    private void OnTimelinePropertiesChanged(GlobalSystemMediaTransportControlsSession s, TimelinePropertiesChangedEventArgs a)
+    {
+        if (_disposed) return;
+        try
+        {
+            var p = s.GetTimelineProperties();
+            if (p != null)
+            {
+                var dur = p.EndTime - p.StartTime;
+                TimelineChanged?.Invoke(p.Position, dur);
+            }
+        }
+        catch (Exception ex)
+        {
+            Program.Log(ex);
+        }
     }
 
     private void OnPlaybackInfoChanged(GlobalSystemMediaTransportControlsSession s, object a)
@@ -269,7 +296,14 @@ public sealed class MediaService : IDisposable
             if (!string.IsNullOrWhiteSpace(CurrentTitle))
             {
                 var id = s.SourceAppUserModelId;
-                _lastExe = FindExe(id) ?? (id == _lastAppId ? _lastExe : "");
+                if (id == _lastAppId && !string.IsNullOrEmpty(_lastExe))
+                {
+                    // Retain known executable path for current app without re-scanning
+                }
+                else
+                {
+                    _lastExe = FindExe(id) ?? (id == _lastAppId ? _lastExe : "");
+                }
                 _lastAppId = id;
                 SaveLast(CurrentTitle, CurrentArtist, art);
             }
@@ -282,6 +316,17 @@ public sealed class MediaService : IDisposable
                 announce && changed && IsPlaying,
                 s.SourceAppUserModelId
             ));
+
+            try
+            {
+                var tl = s.GetTimelineProperties();
+                if (tl != null)
+                {
+                    var dur = tl.EndTime - tl.StartTime;
+                    TimelineChanged?.Invoke(tl.Position, dur);
+                }
+            }
+            catch { /* non-critical timeline read */ }
         }
         catch (Exception ex)
         {
@@ -295,7 +340,7 @@ public sealed class MediaService : IDisposable
         try
         {
             using var ras = await thumb.OpenReadAsync();
-            var ms = new MemoryStream();
+            using var ms = new MemoryStream();
             await ras.AsStreamForRead().CopyToAsync(ms);
             if (ms.Length == 0) return null;
             ms.Position = 0;
@@ -303,7 +348,7 @@ public sealed class MediaService : IDisposable
             var bmp = new BitmapImage();
             bmp.BeginInit();
             bmp.CacheOption = BitmapCacheOption.OnLoad;
-            bmp.DecodePixelWidth = 128;
+            bmp.DecodePixelWidth = 96;
             bmp.StreamSource = ms;
             bmp.EndInit();
             bmp.Freeze();
@@ -315,7 +360,7 @@ public sealed class MediaService : IDisposable
         }
     }
 
-    public void Previous() => _ = _session?.TrySkipPreviousAsync();
+    public bool Previous() { if (_session == null) return false; _ = _session.TrySkipPreviousAsync(); return true; }
 
     public void TogglePlayPause()
     {
@@ -329,7 +374,77 @@ public sealed class MediaService : IDisposable
         }
     }
 
-    public void Next() => _ = _session?.TrySkipNextAsync();
+    public bool Next() { if (_session == null) return false; _ = _session.TrySkipNextAsync(); return true; }
+
+    public async Task SeekToRatioAsync(double ratio)
+    {
+        try
+        {
+            if (_session == null) return;
+            var timeline = _session.GetTimelineProperties();
+            if (timeline == null) return;
+            var duration = timeline.EndTime - timeline.StartTime;
+            if (duration <= TimeSpan.Zero) return;
+            long ticks = timeline.StartTime.Ticks + (long)(duration.Ticks * Math.Clamp(ratio, 0.0, 1.0));
+            await _session.TryChangePlaybackPositionAsync(ticks);
+        }
+        catch (Exception ex)
+        {
+            Program.Log(ex);
+        }
+    }
+
+    public async Task ToggleShuffleAsync()
+    {
+        try
+        {
+            if (_session == null) return;
+            var info = _session.GetPlaybackInfo();
+            bool next = !(info?.IsShuffleActive ?? false);
+            await _session.TryChangeShuffleActiveAsync(next);
+        }
+        catch (Exception ex)
+        {
+            Program.Log(ex);
+        }
+    }
+
+    public async Task CycleRepeatAsync()
+    {
+        try
+        {
+            if (_session == null) return;
+            var info = _session.GetPlaybackInfo();
+            var current = info?.AutoRepeatMode ?? Windows.Media.MediaPlaybackAutoRepeatMode.None;
+            var next = current switch
+            {
+                Windows.Media.MediaPlaybackAutoRepeatMode.None => Windows.Media.MediaPlaybackAutoRepeatMode.List,
+                Windows.Media.MediaPlaybackAutoRepeatMode.List => Windows.Media.MediaPlaybackAutoRepeatMode.Track,
+                _ => Windows.Media.MediaPlaybackAutoRepeatMode.None
+            };
+            await _session.TryChangeAutoRepeatModeAsync(next);
+        }
+        catch (Exception ex)
+        {
+            Program.Log(ex);
+        }
+    }
+
+    public (TimeSpan position, TimeSpan duration)? GetTimeline()
+    {
+        try
+        {
+            if (_session == null) return null;
+            var timeline = _session.GetTimelineProperties();
+            if (timeline == null) return null;
+            var duration = timeline.EndTime - timeline.StartTime;
+            return (timeline.Position, duration);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     private void SaveLast(string title, string artist, BitmapImage? art)
     {
@@ -396,8 +511,13 @@ public sealed class MediaService : IDisposable
         }
     }
 
+    private static readonly Dictionary<string, string> ExePathCache = new(StringComparer.OrdinalIgnoreCase);
+
     private static string? FindExe(string id)
     {
+        if (string.IsNullOrWhiteSpace(id)) return null;
+        if (ExePathCache.TryGetValue(id, out var cached) && File.Exists(cached)) return cached;
+
         Process[]? processes = null;
         try
         {
@@ -409,7 +529,11 @@ public sealed class MediaService : IDisposable
                     if (p.ProcessName.Length >= 3 && id.Contains(p.ProcessName, StringComparison.OrdinalIgnoreCase))
                     {
                         var f = p.MainModule?.FileName;
-                        if (!string.IsNullOrEmpty(f) && File.Exists(f)) return f;
+                        if (!string.IsNullOrEmpty(f) && File.Exists(f))
+                        {
+                            ExePathCache[id] = f;
+                            return f;
+                        }
                     }
                 }
                 catch
@@ -533,6 +657,7 @@ public sealed class MediaService : IDisposable
             if (_session != null)
             {
                 _session.MediaPropertiesChanged -= OnMediaPropertiesChanged;
+                _session.TimelinePropertiesChanged -= OnTimelinePropertiesChanged;
             }
 
             foreach (var w in _watched)

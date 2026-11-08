@@ -1,4 +1,4 @@
-﻿// ====================================================================================================
+// ====================================================================================================
 // Author: Akhin (SPARK-REX)
 // GitHub: https://github.com/SPARK-REX
 // Project: Dynamic Island for Windows
@@ -7,7 +7,6 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 
 namespace DynamicIsland;
 
@@ -37,7 +36,7 @@ public partial class MainWindow
         UpdateClockBattery();
     }
 
-    private void SetAlwaysCharging(bool enable)
+    public void SetAlwaysCharging(bool enable)
     {
         _alwaysShowCharging = enable;
         UpdateConstantChargingIndicator(_powerService.IsCharging, _powerService.BatteryPercent);

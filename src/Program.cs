@@ -68,6 +68,10 @@ internal static class Program
 
             Log("Constructing MainWindow...");
             var mainWindow = new MainWindow();
+            if (Array.Exists(args, arg => string.Equals(arg, "--settings", StringComparison.OrdinalIgnoreCase)))
+            {
+                mainWindow.Loaded += (_, _) => mainWindow.OpenSettings();
+            }
             Log("MainWindow constructed. Calling app.Run()...");
             app.Run(mainWindow);
             Log("app.Run() returned cleanly.");

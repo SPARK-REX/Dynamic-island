@@ -1,11 +1,10 @@
-﻿// ====================================================================================================
+// ====================================================================================================
 // Author: Akhin (SPARK-REX)
 // GitHub: https://github.com/SPARK-REX
 // Project: Dynamic Island for Windows
 // ====================================================================================================
 using System;
 using System.Windows;
-using System.Windows.Media.Animation;
 
 namespace DynamicIsland;
 
@@ -20,6 +19,13 @@ public partial class MainWindow
 
     private void ShowVolume(float volume, bool muted)
     {
+        UpdateMusicVolumeSliderUi(volume, muted);
+
+        if (_mode == Mode.Media)
+        {
+            return;
+        }
+
         VolIcon.Text = IslandLogic.VolumeGlyph(volume, muted);
         int pct = IslandLogic.Percent(volume, muted);
         VolPct.Text = pct.ToString();

@@ -8,8 +8,8 @@ Thank you for your interest in contributing to **Dynamic Island for Windows**! W
 
 1. **Fork and clone** the repository:
    ```cmd
-   git clone https://github.com/SPARK-REX/Dynamic-Island-for-windows.git
-   cd Dynamic-Island-for-windows
+   git clone https://github.com/SPARK-REX/Dynamic-island.git
+   cd Dynamic-island
    ```
 
 2. **Install dependencies and verify the environment:**

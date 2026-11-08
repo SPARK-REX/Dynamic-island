@@ -5,10 +5,13 @@ publish/
 .dotnet/
 *.user
 *.userosscache
+*.suo
+*.userprefs
 *.sln.docstates
 .vs/
 .idea/
 .vscode/
+.claude/
 
 # Build results
 [Dd]ebug/
@@ -18,10 +21,15 @@ x86/
 [Aa]rm/
 [Aa]rm64/
 bld/
-[Bb]in/
-[Oo]bj/
 [Ll]og/
 [Ll]ogs/
+
+# Sensitive keys & private credentials
+gemini.key
+*.key
+*.pem
+*.pfx
+secrets.*
 
 # OS generated files
 Thumbs.db
@@ -30,3 +38,4 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 *.zip
+release_package/

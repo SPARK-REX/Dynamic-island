@@ -1,4 +1,4 @@
-﻿// ====================================================================================================
+// ====================================================================================================
 // Author: Akhin (SPARK-REX)
 // GitHub: https://github.com/SPARK-REX
 // Project: Dynamic Island for Windows
@@ -16,7 +16,6 @@ namespace DynamicIsland.Services;
 /// </summary>
 public sealed class PrivacyService
 {
-    private static readonly string[] KnownCameraProcesses = { "WindowsCamera" };
 
     public static (bool MicInUse, bool CamInUse) CheckHardwareAccess()
     {
@@ -36,10 +35,7 @@ public sealed class PrivacyService
 
     public static bool IsCameraInUse()
     {
-        // 1. Check if known dedicated camera applications are running (e.g. Windows Camera on Windows 11)
-        if (IsCameraProcessRunning()) return true;
-
-        // 2. Check CapabilityAccessManager consent store in HKCU and HKLM
+        // CapabilityAccessManager ConsentStore records all camera usage with microsecond fidelity.
         return IsCapabilityInUse("webcam");
     }
 
@@ -60,8 +56,18 @@ public sealed class PrivacyService
         return start.Value > stop.Value;
     }
 
+    private static bool _lastWasapiCapture;
+    private static long _lastWasapiCheckTick;
+
     private static bool IsWasapiCaptureActive()
     {
+        long now = Environment.TickCount64;
+        if (now - _lastWasapiCheckTick < 2500)
+        {
+            return _lastWasapiCapture;
+        }
+        _lastWasapiCheckTick = now;
+
         try
         {
             using var enumerator = new MMDeviceEnumerator();
@@ -75,16 +81,19 @@ public sealed class PrivacyService
 
                     sessionManager.RefreshSessions();
                     var sessions = sessionManager.Sessions;
+                    if (sessions == null) continue;
+
                     for (int i = 0; i < sessions.Count; i++)
                     {
                         var session = sessions[i];
-                        if (session.IsSystemSoundsSession) continue;
+                        if (session == null || session.IsSystemSoundsSession) continue;
                         if (session.State == AudioSessionState.AudioSessionStateActive)
                         {
-                            return true;
+                            return _lastWasapiCapture = true;
                         }
                     }
                 }
+                catch { }
                 finally
                 {
                     device.Dispose();
@@ -95,26 +104,9 @@ public sealed class PrivacyService
         {
             // CoreAudio enumeration may fail if audio service is stopped or hardware absent
         }
-        return false;
+        return _lastWasapiCapture = false;
     }
 
-    private static bool IsCameraProcessRunning()
-    {
-        try
-        {
-            foreach (var name in KnownCameraProcesses)
-            {
-                var procs = Process.GetProcessesByName(name);
-                bool any = procs.Length > 0;
-                foreach (var p in procs) p.Dispose();
-                if (any) return true;
-            }
-        }
-        catch
-        {
-        }
-        return false;
-    }
 
     private static bool IsCapabilityInUse(string capability)
     {

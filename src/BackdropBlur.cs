@@ -1,8 +1,3 @@
-﻿// ====================================================================================================
-// Author: Akhin (SPARK-REX)
-// GitHub: https://github.com/SPARK-REX
-// Project: Dynamic Island for Windows
-// ====================================================================================================
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -27,18 +22,19 @@ namespace DynamicIsland;
 internal sealed class BackdropBlur
 {
     const uint WDA_EXCLUDEFROMCAPTURE = 0x11;
-    const int Shrink = 10;   // blur strength: capture is divided by this
+    const int Shrink = 10;   // blur strength: capture is divided by this (softer frosted glass)
 
     [DllImport("user32.dll")]
     static extern bool SetWindowDisplayAffinity(IntPtr hWnd, uint affinity);
 
     readonly Window _win;
     readonly Path _shape, _tint;
-    readonly DispatcherTimer _timer = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(400) };
+    readonly DispatcherTimer _timer = new(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(2500) };
     ImageBrush? _brush;
     WriteableBitmap? _wb;
     Bitmap? _full, _small;
     int _pw, _ph;
+    byte[]? _srcBuf, _dstBuf;
     bool _active;
 
     public BackdropBlur(Window win, Path shape, Path tint)
@@ -77,6 +73,15 @@ internal sealed class BackdropBlur
         if (hwnd != IntPtr.Zero) SetWindowDisplayAffinity(hwnd, 0);
         _shape.Fill = System.Windows.Media.Brushes.Black;
         _tint.Visibility = Visibility.Collapsed;
+        try
+        {
+            _full?.Dispose(); _full = null;
+            _small?.Dispose(); _small = null;
+            _wb = null;
+            _srcBuf = null;
+            _dstBuf = null;
+        }
+        catch { }
     }
 
     public void Refresh()
@@ -95,7 +100,7 @@ internal sealed class BackdropBlur
             if (_full == null || pw != _pw || ph != _ph) Allocate(pw, ph);
             using (var g = Graphics.FromImage(_full!))
                 g.CopyFromScreen(px, py, 0, 0, new System.Drawing.Size(pw, ph),
-                                 CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
+                                 CopyPixelOperation.SourceCopy);
             using (var g = Graphics.FromImage(_small!))
             {
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -107,13 +112,42 @@ internal sealed class BackdropBlur
                                       ImageLockMode.ReadOnly, DPixelFormat.Format32bppPArgb);
             try
             {
-                _wb!.WritePixels(new Int32Rect(0, 0, _small.Width, _small.Height), bd.Scan0, bd.Stride * _small.Height, bd.Stride);
+                int w = _small.Width, h = _small.Height, stride = bd.Stride;
+                Marshal.Copy(bd.Scan0, _srcBuf!, 0, stride * h);
+                Glass(_srcBuf!, _dstBuf!, w, h, stride);
+                _wb!.WritePixels(new Int32Rect(0, 0, w, h), _dstBuf!, stride, 0);
             }
             finally { _small.UnlockBits(bd); }
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // Desktop context temporarily unavailable (e.g. screen locked or display mode changing)
         }
         catch (Exception ex)
         {
             Program.Log(ex);
+        }
+    }
+
+    const float Sat = 1.15f;                        // keep backdrop colors vivid but natural
+    const float TopLift = 1.12f, BotLift = 0.86f;   // light through glass: bright top, deeper bottom
+
+    /// <summary>Apple liquid-glass finish: clean blur, natural saturation, vertical light gradient.</summary>
+    void Glass(byte[] src, byte[] dst, int w, int h, int stride)
+    {
+        for (int y = 0; y < h; y++)
+        {
+            float lift = TopLift + (BotLift - TopLift) * (h <= 1 ? 0f : (float)y / (h - 1));
+            for (int x = 0; x < w; x++)
+            {
+                int o = y * stride + x * 4;
+                float b = src[o], g = src[o + 1], r = src[o + 2];
+                float l = 0.114f * b + 0.587f * g + 0.299f * r;
+                dst[o]     = (byte)Math.Clamp((l + (b - l) * Sat) * lift, 0, 255);
+                dst[o + 1] = (byte)Math.Clamp((l + (g - l) * Sat) * lift, 0, 255);
+                dst[o + 2] = (byte)Math.Clamp((l + (r - l) * Sat) * lift, 0, 255);
+                dst[o + 3] = 255;
+            }
         }
     }
 
@@ -125,6 +159,7 @@ internal sealed class BackdropBlur
         _full = new Bitmap(pw, ph, DPixelFormat.Format32bppPArgb);
         _small = new Bitmap(sw, sh, DPixelFormat.Format32bppPArgb);
         _wb = new WriteableBitmap(sw, sh, 96, 96, PixelFormats.Pbgra32, null);
+        _srcBuf = new byte[sw * 4 * sh]; _dstBuf = new byte[sw * 4 * sh];
         _brush = new ImageBrush(_wb)
         {
             ViewportUnits = BrushMappingMode.Absolute,

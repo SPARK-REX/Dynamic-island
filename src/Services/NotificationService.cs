@@ -1,4 +1,4 @@
-﻿// ====================================================================================================
+// ====================================================================================================
 // Author: Akhin (SPARK-REX)
 // GitHub: https://github.com/SPARK-REX
 // Project: Dynamic Island for Windows
@@ -44,6 +44,7 @@ public sealed class NotificationService : IDisposable
     };
 
     private readonly ConcurrentDictionary<string, DateTime> _seenToasts = new();
+    private readonly ConcurrentDictionary<IntPtr, DateTime> _activeToastWindows = new();
     private readonly HashSet<uint> _seenNotificationIds = new();
     private readonly Queue<uint> _seenNotificationQueue = new();
     private readonly DateTimeOffset _startTime = DateTimeOffset.Now;
@@ -51,6 +52,7 @@ public sealed class NotificationService : IDisposable
     private UserNotificationListener? _userNotificationListener;
     private int _isScanningWindows;
     private bool _disposed;
+    private bool _nativeListenerActive;
 
     public event Action<NotificationItem>? NotificationReceived;
 
@@ -65,6 +67,7 @@ public sealed class NotificationService : IDisposable
                 var status = await _userNotificationListener.RequestAccessAsync();
                 if (status == UserNotificationListenerAccessStatus.Allowed)
                 {
+                    _nativeListenerActive = true;
                     var existing = await _userNotificationListener.GetNotificationsAsync(NotificationKinds.Toast);
                     if (existing != null)
                     {
@@ -142,6 +145,10 @@ public sealed class NotificationService : IDisposable
                         ? $"{app} · {title}"
                         : title;
 
+                    // Cross-service deduplication: ensure window scraper never duplicates native toasts
+                    string key = $"window:{app}:{title}:{body}";
+                    _seenToasts[key] = DateTime.UtcNow;
+
                     NotificationReceived?.Invoke(new NotificationItem(displayTitle, body, app));
                 }
             }
@@ -162,17 +169,22 @@ public sealed class NotificationService : IDisposable
             var now = DateTime.UtcNow;
             foreach (var kvp in _seenToasts)
             {
-                if ((now - kvp.Value).TotalSeconds > 25)
+                if ((now - kvp.Value).TotalSeconds > 120)
                 {
                     _seenToasts.TryRemove(kvp.Key, out _);
                 }
             }
 
+            var visibleWindows = new HashSet<IntPtr>();
             var candidates = new List<IntPtr>();
 
             NativeMethods.EnumWindows((h, _) =>
             {
                 if (h == myHwnd || !NativeMethods.IsWindowVisible(h)) return true;
+                visibleWindows.Add(h);
+
+                // If this window handle was already notified and is still open, do not re-process it!
+                if (_activeToastWindows.ContainsKey(h)) return true;
 
                 NativeMethods.GetWindowThreadProcessId(h, out var pid);
                 if (pid == (uint)Environment.ProcessId || pid == 0) return true;
@@ -196,16 +208,17 @@ public sealed class NotificationService : IDisposable
                 int w = rc.Width;
                 int hpx = rc.Height;
 
-                bool isShellToast = (procName.Equals("shellexperiencehost", StringComparison.OrdinalIgnoreCase) ||
+                // Only scan shell toast windows if native UWP UserNotificationListener is NOT active.
+                // When native listener is active, it handles all Windows shell toasts with zero lag and no ActionCenter scraping bugs.
+                bool isShellToast = !_nativeListenerActive &&
+                                    (procName.Equals("shellexperiencehost", StringComparison.OrdinalIgnoreCase) ||
                                      procName.Equals("actioncenter", StringComparison.OrdinalIgnoreCase) ||
                                      procName.Equals("explorer", StringComparison.OrdinalIgnoreCase)) &&
-                                    (cls.Contains("Windows.UI.Core.CoreWindow", StringComparison.OrdinalIgnoreCase) ||
-                                     cls.Contains("ToastView", StringComparison.OrdinalIgnoreCase) ||
-                                     cls.Contains("ActionCenter", StringComparison.OrdinalIgnoreCase) ||
-                                     cls.Contains("Windows.UI.Input.InputSite", StringComparison.OrdinalIgnoreCase) ||
-                                     cls.Contains("Shell_Dialog", StringComparison.OrdinalIgnoreCase) ||
-                                     title.Contains("notification", StringComparison.OrdinalIgnoreCase) ||
-                                     title.Contains("Toast", StringComparison.OrdinalIgnoreCase));
+                                    (cls.Contains("ToastView", StringComparison.OrdinalIgnoreCase) ||
+                                     title.Contains("Toast", StringComparison.OrdinalIgnoreCase)) &&
+                                    !cls.Contains("Windows.UI.Input.InputSite", StringComparison.OrdinalIgnoreCase) &&
+                                    !cls.Contains("ActionCenter", StringComparison.OrdinalIgnoreCase) &&
+                                    (w >= 180 && w <= 500 && hpx >= 40 && hpx <= 220);
 
                 bool isTelegramPopup = procName.Contains("telegram") && (
                     (w >= 160 && w <= 550 && hpx >= 40 && hpx <= 250) ||
@@ -220,6 +233,15 @@ public sealed class NotificationService : IDisposable
                 }
                 return true;
             }, IntPtr.Zero);
+
+            // Prune closed windows from _activeToastWindows
+            foreach (var handle in _activeToastWindows.Keys)
+            {
+                if (!visibleWindows.Contains(handle))
+                {
+                    _activeToastWindows.TryRemove(handle, out _);
+                }
+            }
 
             if (candidates.Count == 0)
             {
@@ -267,9 +289,12 @@ public sealed class NotificationService : IDisposable
 
                             string key = $"window:{app}:{title}:{body}";
 
-                            if (_seenToasts.TryGetValue(key, out var last) && (DateTime.UtcNow - last).TotalSeconds < 4)
+                            // If this exact notification was already shown within the last 60 seconds, do not re-emit!
+                            if (_seenToasts.TryGetValue(key, out var last) && (DateTime.UtcNow - last).TotalSeconds < 60)
                                 continue;
+
                             _seenToasts[key] = DateTime.UtcNow;
+                            _activeToastWindows[h] = DateTime.UtcNow;
 
                             string displayTitle = (!string.IsNullOrEmpty(app) &&
                                                    !title.Contains(app, StringComparison.OrdinalIgnoreCase) &&
@@ -306,6 +331,7 @@ public sealed class NotificationService : IDisposable
         if (_disposed) return;
         _disposed = true;
         _seenToasts.Clear();
+        _activeToastWindows.Clear();
         _seenNotificationIds.Clear();
         _seenNotificationQueue.Clear();
         _userNotificationListener = null;

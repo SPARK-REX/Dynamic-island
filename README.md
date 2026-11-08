@@ -57,6 +57,141 @@ Inside the expanded island, scroll your mouse wheel or swipe your trackpad to cy
 
 ---
 
+## 🤖 AI Voice Assistant (Nixi)
+
+Nixi is a built-in voice assistant that lives on the island. It supports **two modes** — choose whichever fits your workflow and privacy needs.
+
+### 🧠 AI Modes
+
+| Mode | Backend | Requirements | Privacy | Latency |
+|---|---|---|---|---|
+| **Cloud · Gemini** | Google Gemini 2.5 Flash (API) | Internet + Gemini API key | Audio sent to Google | ~500–1500 ms |
+| **Local · Ollama** | Your own model on this PC (via Ollama) | Ollama installed + model pulled | Fully offline, audio never leaves your machine | ~1–3 s (CPU) / ~500 ms (GPU) |
+
+> **Both modes** support the same tool-calling capabilities: open/close any app, media control, volume, screenshots, brightness, web search, time/date/battery, and conversational chat.
+
+---
+
+### ☁️ Cloud Mode — Google Gemini
+
+**Best for:** Highest accuracy, natural conversation, low-latency on decent connections.
+
+#### Get a Gemini API Key (Free Tier)
+
+1. Go to **[Google AI Studio](https://aistudio.google.com/apikey)** (or [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal) for enterprise).
+2. Click **"Create API Key"** → copy the key.
+3. In Dynamic Island:  
+   **Settings → Voice → Assistant model → Cloud · Gemini → "Set / Change Gemini API Key…"**  
+   Paste the key and save.
+
+**Or manually:** Create a file named `gemini.key` (one key per line, `#` for comments) in any of these locations — the app auto-discovers it:
+```
+%APPDATA%\DynamicIsland\gemini.key
+<app-folder>\gemini.key
+```
+You can store multiple keys; the app rotates automatically on rate limits.
+
+**Free tier limits:** ~15 requests/minute, 1,500 requests/day. Paid plans remove quotas.
+
+---
+
+### 🏠 Local Mode — Ollama (Fully Offline)
+
+**Best for:** Total privacy, zero cloud dependency, works on air-gapped machines.
+
+#### One-Time Setup
+
+1. **Install Ollama**  
+   Download from **[ollama.com](https://ollama.com/download/windows)** and run the installer.  
+   (It installs to `%LOCALAPPDATA%\Programs\Ollama\ollama.exe` and adds itself to PATH.)
+
+2. **Pull a tool-calling model** (recommended):
+   ```cmd
+   ollama pull qwen2.5:7b
+   ```
+   Lightweight alternatives: `qwen2.5:3b`, `llama3.2:3b`, `qwen2.5:1.5b` (faster, slightly less capable).
+
+3. **Start the server** (usually auto-starts, but you can run manually):
+   ```cmd
+   ollama serve
+   ```
+   Default endpoint: `http://localhost:11434/v1` (OpenAI-compatible).
+
+4. **Switch Dynamic Island to Local mode:**  
+   **Settings → Voice → Assistant model → Local · Ollama**  
+   The app will auto-start `ollama serve` if needed and pull the model on first use.
+
+#### Customize Local Settings
+
+| Setting | Default | Where to change |
+|---|---|---|
+| **Model name** | `qwen2.5:7b` | Settings → Voice → Local model name |
+| **Endpoint** | `http://localhost:11434/v1` | Settings → Voice → Local endpoint |
+
+> 💡 **Tip:** For best results, use models tagged with tool/function calling support (Qwen 2.5, Llama 3.2, etc.). The default `qwen2.5:7b` balances speed and capability on modern CPUs; drop to `qwen2.5:3b` for snappier responses on older hardware.
+
+---
+
+### ⌨️ Voice Activation
+
+| Method | How to enable | Trigger |
+|---|---|---|
+| **Push-to-Talk** | Settings → Voice → Push to talk (ON) | Hold **Caps Lock** (default) or your custom hotkey |
+| **Wake Word** | Settings → Voice → Wake word (ON) | Say **"Hey Nixi"**, **"Nixi"**, or **"Island"** |
+
+- **Push-to-Talk presets:** Caps Lock, `Ctrl+Space`, `Alt+V`, Mouse 4 — or define any custom key/combo.
+- **Wake phrase options:** "Hey Nixi" (default), "Nixi", "Island".
+- Both can be active simultaneously; push-to-talk takes priority while held.
+
+---
+
+### 🎯 What Nixi Can Do (Both Modes)
+
+| Category | Example Commands |
+|---|---|
+| **Apps** | "Open Spotify", "Launch Chrome", "Close Word", "Quit Discord" |
+| **Media** | "Play", "Pause", "Next track", "Previous song", "Volume 50", "Mute" |
+| **System** | "Screenshot", "Brightness 80%", "Dim screen", "What time is it", "Battery status" |
+| **Web** | "Search for best mechanical keyboards", "Google weather Tokyo" |
+| **Chat** | "Tell me a joke", "How are you", "Explain quantum computing in one sentence" |
+
+All voice replies are spoken aloud (Gemini TTS in Cloud mode, Windows SAPI in Local mode) **and** shown as a toast on the island.
+
+---
+
+## 🎨 Display & Mascot Settings
+
+The **Display** tab in Settings (`Settings → Display`) lets you customize the island's look and the optional animated mascot.
+
+### 🏝️ Island Theme & Layout
+
+| Setting | Options | Description |
+|---|---|---|
+| **Look & Feel** | Glassy / Pure Black | Glassy uses Windows backdrop blur (Mica/Acrylic); Pure Black is a solid opaque pill. |
+| **Clock Format** | 12-hour / 24-hour | Time display on the island status bar. |
+| **Island Scale** | 80% / 100% / 120% | Global size multiplier for the pill and all internal content. |
+| **Island Position** | Top Left / Top Center / Top Right | Default screen anchor; double-click anytime to snap back to Top Center. |
+
+---
+
+### 🧸 Mascot (Animated Eyes)
+
+Replace the standard island panels with a pair of expressive animated eyes that react to system state and voice interaction.
+
+| Setting | Options | Description |
+|---|---|---|
+| **Enable Mascot** | On / Off | Toggle the mascot entirely. When off, standard media/timer/clock panels show. |
+| **Accessory** | None / Shades / Bow | Cosmetic add-on for the mascot. |
+| **Sleep Until Tapped** | On / Off | When enabled, a sleeping mascot ignores mouse hover and only wakes with a startle animation on click/tap. |
+| **Keep Mascot Awake** | On / Off | Prevents the mascot from ever falling asleep (idle animation stays active). |
+| **Privacy Dots** | On / Off | Shows microphone (orange) and camera (green) indicator dots on the mascot when hardware is in use. |
+| **Listening Animation** | Glowing Ring / Ripple Glow / Rainbow Glow / Side Waves | Visual feedback while Nixi is listening to your voice command. |
+| **Eye Color** | 24 presets + Custom picker | Choose from a curated palette (blues, greens, yellows, reds, pinks, purples, white, silver) or open the system color dialog for any hex color. |
+
+> 💡 **Mascot behavior:** The mascot idles with subtle breathing blinks, reacts to media playback (subtle bounce on beat), shows privacy dots when mic/camera are active, and plays the selected listening animation during voice input. "Sleep Until Tapped" and "Keep Awake" are mutually exclusive in practice — enable one or the other.
+
+---
+
 ## 🎮 Gestures & Controls
 
 > [!TIP]
@@ -72,6 +207,8 @@ Inside the expanded island, scroll your mouse wheel or swipe your trackpad to cy
 | **Cycle Views (Expanded)** | Mouse wheel / 2-finger scroll | Smoothly switches between Now Playing, Focus Timer, and Big Clock |
 | **Open Music App** | Left-click on media card | Focuses or restores the active audio application (Spotify, Chrome, etc.) |
 | **Adjust Focus Timer** | `↑` / `↓` (±1 min), `←` / `→` (±5 min) | Quick stepper adjustment via keyboard or mouse wheel |
+| **Toggle Voice (Push-to-Talk)** | Hold **Caps Lock** (default) | Activates Nixi's microphone while held |
+| **Wake Word** | Say **"Hey Nixi"** | Hands-free voice activation |
 | **Tray Context Menu** | Right-click the system tray icon | Access presets, clock formats, startup toggle, and settings |
 
 ---
@@ -86,10 +223,10 @@ Dynamic Island is built on **.NET 10**. Choose your preferred installation optio
 |---|---|---|
 | **GitHub Release (Standard)** | [.NET 10 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/10.0) (~30 MB) | Lightweight binary package, fast download |
 | **Self-Contained Build** | None (Zero prerequisites) | Bundles the .NET runtime into the application folder |
-| **Build from Source** | .NET 10 SDK (auto-installed by `setup.bat`) | Full developer build environment |
+| **Build from Source** | [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) | Full developer build environment |
 
 > [!NOTE]
-> If you do not have the .NET 10 Desktop Runtime installed, Windows will prompt you with a direct download link on first launch, or `setup.bat` can install it automatically.
+> If you do not have the .NET 10 Desktop Runtime installed, Windows will prompt you with a direct download link on first launch.
 
 ---
 
@@ -97,7 +234,7 @@ Dynamic Island is built on **.NET 10**. Choose your preferred installation optio
 
 1. Download the latest release `.zip` from [GitHub Releases](https://github.com/SPARK-REX/Dynamic-island/releases).
 2. Extract the archive to any folder of your choice (e.g. `C:\Tools\DynamicIsland`).
-3. Double-click **`DynamicIsland.exe`** (or `run.bat`).
+3. Double-click **`DynamicIsland.exe`**.
 
 > [!IMPORTANT]
 > ### 🛡️ Windows SmartScreen Notice
@@ -120,23 +257,12 @@ Dynamic Island is built on **.NET 10**. Choose your preferred installation optio
    cd Dynamic-island
    ```
 
-2. **Run the automated setup script:**
+2. **Build and launch:**
    ```cmd
-   setup.bat
+   rebuild.bat
    ```
    > [!TIP]
-   > **Auto-Dependency Installation:** If the .NET 10 SDK is missing on your machine, `setup.bat` will automatically detect it and install it for you via Windows Package Manager (`winget`). Simply grant permission when prompted!
-
-3. **Run the unit test suite:**
-   ```cmd
-   test.bat
-   ```
-   *(Executes all 135 automated unit tests in `DynamicIsland.Tests` covering volume math, geometry, timer formatting, clipboard history, battery charging, and notification filtering)*
-
-4. **Launch the application:**
-   ```cmd
-   run.bat
-   ```
+   > `rebuild.bat` automatically verifies prerequisites, stops any running instances, cleans and publishes a fresh Release build to `publish\current`, and launches Dynamic Island!
 
 ---
 
@@ -189,11 +315,7 @@ Dynamic-island/
 │   ├── NativeMethods.cs     # P/Invoke Win32 definitions
 │   ├── Services/            # Decoupled domain services (Clipboard, Audio, Media, Timer, etc.)
 │   └── assets/              # Preview screenshots, GIFs, and media
-├── tests/                   # Dedicated unit test project
-│   └── DynamicIsland.Tests/ # Automated tests covering logic, math, and filtering (135 tests)
-├── run.bat                  # 1-click background launcher
-├── setup.bat                # 1-click dependency installer & build script
-├── test.bat                 # 1-click automated test runner
+├── rebuild.bat              # 1-click build and launch script
 ├── README.md                # Project documentation
 └── LICENSE                  # MIT License
 ```
@@ -212,11 +334,6 @@ Dynamic Island stores lightweight user preferences and error diagnostics in:
 ```
 
 ---
-
-official website 🔗
-
-https://keen-panda-f5b329.netlify.app/
-
 
 ## 👤 Author
 

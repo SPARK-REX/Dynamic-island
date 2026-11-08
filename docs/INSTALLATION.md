@@ -8,7 +8,7 @@ This guide walks you through downloading, installing, configuring, and troublesh
 
 If you just want to use the application without building from source:
 
-1. Go to the [GitHub Releases](https://github.com/SPARK-REX/Dynamic-island-for-windows/releases) page.
+1. Go to the [GitHub Releases](https://github.com/SPARK-REX/Dynamic-island/releases) page.
 2. Download the latest release `.zip` archive (e.g., `DynamicIsland-v1.0.0-win-x64.zip`).
 3. Extract the `.zip` file into any folder (e.g. `C:\Tools\DynamicIsland`).
 4. Double-click **`DynamicIsland.exe`** (or `run.bat`).
@@ -47,8 +47,8 @@ If you just want to use the application without building from source:
 ### Quick Setup:
 1. Clone the repository:
    ```cmd
-   git clone https://github.com/SPARK-REX/Dynamic-island-for-windows.git
-   cd Dynamic-island-for-windows
+   git clone https://github.com/SPARK-REX/Dynamic-island.git
+   cd Dynamic-island
    ```
 
 2. Run the automated setup script:

@@ -1,4 +1,4 @@
-﻿// ====================================================================================================
+// ====================================================================================================
 // Author: Akhin (SPARK-REX)
 // GitHub: https://github.com/SPARK-REX
 // Project: Dynamic Island for Windows
@@ -20,10 +20,6 @@ public static class Ease
 {
     public static readonly Func<double, double> Linear = p => p;
     public static Func<double, double> PowerOut(int n) => p => 1 - Math.Pow(1 - p, n);
-    public static Func<double, double> PowerInOut(int n) =>
-        p => p < 0.5 ? Math.Pow(2 * p, n) / 2 : 1 - Math.Pow(2 * (1 - p), n) / 2;
-    public static readonly Func<double, double> ExpoOut = p => p >= 1 ? 1 : 1 - Math.Pow(2, -10 * p);
-    public static readonly Func<double, double> SineInOut = p => -(Math.Cos(Math.PI * p) - 1) / 2;
 
     /// <summary>gsap back.out(s). s=1.7 is gsap's default overshoot.</summary>
     public static Func<double, double> BackOut(double s = 1.70158) => p => { p -= 1; return p * p * ((s + 1) * p + s) + 1; };

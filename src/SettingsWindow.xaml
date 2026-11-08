@@ -1,0 +1,573 @@
+<!--
+====================================================================================================
+Author: Akhin (SPARK-REX)
+GitHub: https://github.com/SPARK-REX
+Project: Dynamic Island for Windows
+Native WPF settings window (no WebView2) — opens instantly.
+Redesign: quiet graphite surfaces, one violet accent, hairline borders,
+nested radius math, line icons, 4px spacing grid.
+====================================================================================================
+-->
+<Window x:Class="DynamicIsland.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nixi Island — Settings"
+        Width="1000" Height="760"
+        MinWidth="820" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        Background="#111318"
+        ResizeMode="CanResize"
+        Topmost="True"
+        ShowInTaskbar="True"
+        KeyDown="OnWindowKeyDown">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar -->
+        <Border Grid.Row="0" Background="#0D0F14" MouseLeftButtonDown="OnTitlebarMouseDown">
+            <Grid>
+                <TextBlock Text="Nixi Island — Settings" VerticalAlignment="Center" Margin="14,0,0,0"
+                           Foreground="#E8EAF2" FontWeight="SemiBold" FontSize="13"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="BtnMin" Content="—" Style="{StaticResource TitleBtn}" Click="OnMinClick" ToolTip="Minimize"/>
+                    <Button x:Name="BtnMax" Content="▢" Style="{StaticResource TitleBtn}" Click="OnMaxClick" ToolTip="Maximize / Restore"/>
+                    <Button x:Name="BtnClose" Content="✕" Style="{StaticResource TitleBtnClose}" Click="OnCloseClick" ToolTip="Close"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Body: sidebar + tab panes -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="#0D0F14" BorderBrush="#2A2E38" BorderThickness="0,0,1,0" Padding="20,24">
+                <StackPanel>
+                    <RadioButton x:Name="NavGeneral" GroupName="Nav" Style="{StaticResource NavBtn}" IsChecked="True" Checked="OnNavChecked"
+                                 Tag="M12.25 2c-1.41 0-2.75 0.56-3.75 1.56l-1.25-1.25c-0.94-0.94-2.19-0.94-3.12 0s-0.94 2.19 0 3.12l1.25 1.25c-1 0.94-1.56 2.34-1.56 3.75s0.56 2.75 1.56 3.75l-1.25 1.25c-0.94 0.94-0.94 2.19 0 3.12s2.19 0.94 3.12 0l1.25-1.25c0.94 1 2.34 1.56 3.75 1.56s2.75-0.56 3.75-1.56l1.25 1.25c0.94 0.94 2.19 0.94 3.12 0s0.94-2.19 0-3.12l-1.25-1.25c1-0.94 1.56-2.34 1.56-3.75s-0.56-2.75-1.56-3.75l1.25-1.25c0.94-0.94 0.94-2.19 0-3.12s-2.19-0.94-3.12 0l-1.25 1.25c-0.94-1-2.34-1.56-3.75-1.56z">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="General"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="NavVoice" GroupName="Nav" Style="{StaticResource NavBtn}" Checked="OnNavChecked"
+                                 Tag="M8 4v3c0 0.6-0.4 1-1 1H5c-0.6 0-1-0.4-1-1V4c0-0.6 0.4-1 1-1h2c0.6 0 1 0.4 1 1zM8 10h2v2H8z">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="Voice"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="NavDisplay" GroupName="Nav" Style="{StaticResource NavBtn}" Checked="OnNavChecked"
+                                 Tag="M3 4h12c0.6 0 1 0.4 1 1v6c0 0.6-0.4 1-1 1H3c-0.6 0-1-0.4-1-1V5c0-0.6 0.4-1 1-1zM8 11h6v1H8z">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="Display"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="NavAbout" GroupName="Nav" Style="{StaticResource NavBtn}" Checked="OnNavChecked"
+                                 Tag="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zM11 9h2v5h-2zM11 7h2v1h-2z">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="About"/></StackPanel>
+                    </RadioButton>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <!-- ==================== GENERAL ==================== -->
+                <ScrollViewer x:Name="PaneGeneral" VerticalScrollBarVisibility="Auto" Padding="24,24,24,24">
+                    <StackPanel>
+                        <TextBlock Text="General" Style="{StaticResource PaneTitle}"/>
+                        <TextBlock Text="How the island behaves on your desktop." Style="{StaticResource PaneDesc}"/>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Always on top of every app" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Keep the island above full-screen windows." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglAlwaysOnTop" Grid.Column="1" Style="{StaticResource Switch}" Click="OnAlwaysOnTopClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Start with Windows" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Launch Nixi quietly when you sign in." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglStartWithWindows" Grid.Column="1" Style="{StaticResource Switch}" Click="OnStartWithWindowsClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Charging indicator always on" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Show the battery glow while plugged in." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglCharging" Grid.Column="1" Style="{StaticResource Switch}" Click="OnChargingClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Keep mascot awake" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Never let the mascot fall asleep when idle." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglMascotNeverSleep" Grid.Column="1" Style="{StaticResource Switch}" Click="OnMascotNeverSleepClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Mascot privacy dots" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Show microphone and camera indicator dots while mascot is active." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglMascotPrivacy" Grid.Column="1" Style="{StaticResource Switch}" Click="OnMascotPrivacyClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Focus timer" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Default session length in minutes." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <WrapPanel MaxWidth="300">
+                                        <RadioButton x:Name="RadFocus15" GroupName="FocusDur" Tag="15" Content="15" Style="{StaticResource Pill}" Checked="OnFocusDurChecked"/>
+                                        <RadioButton x:Name="RadFocus25" GroupName="FocusDur" Tag="25" Content="25" Style="{StaticResource Pill}" Checked="OnFocusDurChecked"/>
+                                        <RadioButton x:Name="RadFocus45" GroupName="FocusDur" Tag="45" Content="45" Style="{StaticResource Pill}" Checked="OnFocusDurChecked"/>
+                                        <RadioButton x:Name="RadFocus60" GroupName="FocusDur" Tag="60" Content="60" Style="{StaticResource Pill}" Checked="OnFocusDurChecked"/>
+                                    </WrapPanel>
+                                    <Button Content="Custom" Style="{StaticResource Chip}" Click="OnFocusCustomClick" Margin="8,2,3,2"/>
+                                    <Button Content="Set timer" Style="{StaticResource AccentBtn}" Click="OnFocusStartClick"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Test notification" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Preview how alerts appear on the island." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Send test" Style="{StaticResource Chip}" Click="OnTestNotifyClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ==================== VOICE ==================== -->
+                <ScrollViewer x:Name="PaneVoice" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="24,24,24,24">
+                    <StackPanel>
+                        <TextBlock Text="Voice" Style="{StaticResource PaneTitle}"/>
+                        <TextBlock Text="Configure voice input, wake phrases, and hotkeys." Style="{StaticResource PaneDesc}"/>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Push to talk" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Hold a dedicated key or two-key combo to activate Nixi's microphone listening." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglPushToTalk" Grid.Column="1" Style="{StaticResource Switch}" Click="OnPushToTalkClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Push to talk button" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="Assign your custom hotkey or multi-key shortcut." Style="{StaticResource CardDesc}"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" CornerRadius="10" Background="#1E2128" BorderBrush="#2A2E38" BorderThickness="1" Padding="10,6" VerticalAlignment="Center">
+                                        <TextBlock x:Name="HotkeyBadge" Text="[Caps Lock]" Foreground="#E8EAF2" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold"/>
+                                    </Border>
+                                </Grid>
+                                <WrapPanel Margin="0,12,0,0">
+                                    <TextBlock Text="Presets:" Foreground="#6E7686" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Button Content="[Caps Lock]" Tag="[Caps Lock];20;0" Style="{StaticResource Chip}" Click="OnPresetKeyClick" FontFamily="Consolas"/>
+                                    <Button Content="[Ctrl + Space]" Tag="[Ctrl + Space];32;17" Style="{StaticResource Chip}" Click="OnPresetKeyClick" FontFamily="Consolas"/>
+                                    <Button Content="[Alt + V]" Tag="[Alt + V];86;18" Style="{StaticResource Chip}" Click="OnPresetKeyClick" FontFamily="Consolas"/>
+                                    <Button Content="[Mouse 4]" Tag="[Mouse 4];5;0" Style="{StaticResource Chip}" Click="OnPresetKeyClick" FontFamily="Consolas"/>
+                                    <Button x:Name="BtnCustomKey" Content="[Custom / Combo...]" Style="{StaticResource Chip}" Click="OnCustomKeyClick"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Wake word" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Listen for speech trigger without touching keyboard." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <CheckBox x:Name="TglWakeWord" Style="{StaticResource Switch}" Click="OnWakeWordClick" HorizontalAlignment="Right"/>
+                                    <WrapPanel Margin="0,8,0,0" HorizontalAlignment="Right">
+                                        <RadioButton x:Name="RadWakeHeyNixi" GroupName="Wake" Tag="Hey Nixi" Content="Hey Nixi" Style="{StaticResource Pill}" Checked="OnWakePhraseChecked"/>
+                                        <RadioButton x:Name="RadWakeNixi" GroupName="Wake" Tag="Nixi" Content="Nixi" Style="{StaticResource Pill}" Checked="OnWakePhraseChecked"/>
+                                        <RadioButton x:Name="RadWakeIsland" GroupName="Wake" Tag="Island" Content="Island" Style="{StaticResource Pill}" Checked="OnWakePhraseChecked"/>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Assistant model" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="Cloud runs Gemini (needs an API key). Local runs a small tool-calling model on this PC via Ollama — open/close apps works fully offline." Style="{StaticResource CardDesc}"/>
+                                        <Button Content="Set / Change Gemini API Key..." Style="{StaticResource Chip}" Click="OnApiKeySetupClick" Margin="0,8,0,0" HorizontalAlignment="Left"/>
+                                    </StackPanel>
+                                    <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <RadioButton x:Name="RadProviderCloud" GroupName="Provider" Tag="cloud" Content="Cloud · Gemini" Style="{StaticResource Pill}" Checked="OnProviderChecked"/>
+                                        <RadioButton x:Name="RadProviderLocal" GroupName="Provider" Tag="local" Content="Local · Ollama" Style="{StaticResource Pill}" Checked="OnProviderChecked"/>
+                                    </WrapPanel>
+                                </Grid>
+                                <StackPanel x:Name="LocalModelPanel" Visibility="Collapsed" Margin="0,16,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Local model name" Foreground="#6E7686" FontSize="12"/>
+                                            <TextBox x:Name="TxtLocalModelName" Style="{StaticResource Field}" Margin="0,6,0,0" Text="qwen2.5:7b"
+                                                     LostFocus="OnLocalModelNameCommit" KeyDown="OnLocalModelNameKeyDown"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Local endpoint" Foreground="#6E7686" FontSize="12"/>
+                                            <TextBox x:Name="TxtLocalModelEndpoint" Style="{StaticResource Field}" Margin="0,6,0,0" Text="http://localhost:11434/v1"
+                                                     LostFocus="OnLocalModelEndpointCommit" KeyDown="OnLocalModelEndpointKeyDown"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Margin="0,10,0,0" FontSize="11.5" Foreground="#6E7686" TextWrapping="Wrap"
+                                               Text="Light and fast options: qwen2.5:1.5b, qwen2.5:3b (recommended), llama3.2:3b. Switching to Local starts Ollama and downloads the model on first use."/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Microphone input device &amp; sensitivity" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="Select audio source and adjust pickup threshold." Style="{StaticResource CardDesc}"/>
+                                    </StackPanel>
+                                    <ComboBox x:Name="CmbMicDevice" Grid.Column="1" Style="{StaticResource Combo}" MinWidth="240" VerticalAlignment="Center"
+                                              SelectionChanged="OnMicDeviceChanged"/>
+                                </Grid>
+                                <Grid Margin="0,16,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Sensitivity threshold" Foreground="#6E7686" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="LblMicVal" Grid.Column="1" Text="72%" Foreground="#E8EAF2" FontSize="12" FontWeight="SemiBold"/>
+                                </Grid>
+                                <Slider x:Name="SldMic" Minimum="0" Maximum="100" Value="72" Margin="0,6,0,0" ValueChanged="OnMicSensChanged"/>
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <ProgressBar x:Name="MicMeter" Minimum="0" Maximum="100" Value="0" Height="6" Foreground="#34D399" Background="#2A2E38"/>
+                                    <TextBlock Grid.Column="1" Text="Live meter" Foreground="#6E7686" FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ==================== DISPLAY ==================== -->
+                <ScrollViewer x:Name="PaneDisplay" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="24,24,24,24">
+                    <StackPanel>
+                        <TextBlock Text="Display" Style="{StaticResource PaneTitle}"/>
+                        <TextBlock Text="Customize the visual appearance, theme styling, and island clock." Style="{StaticResource PaneDesc}"/>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Look &amp; feel" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Choose your island visual style and translucency." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <WrapPanel Margin="0,12,0,0">
+                                    <RadioButton x:Name="RadThemeGlassy" GroupName="Theme" Tag="glassy" Content="Glassy" Style="{StaticResource Pill}" Checked="OnThemeChecked"/>
+                                    <RadioButton x:Name="RadThemeBlack" GroupName="Theme" Tag="pure-black" Content="Pure black" Style="{StaticResource Pill}" Checked="OnThemeChecked"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Clock format" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Time display style on the island status bar." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <RadioButton x:Name="RadClock12" GroupName="Clock" Tag="12" Content="12-hour (10:42 PM)" Style="{StaticResource Pill}" Checked="OnClockChecked"/>
+                                    <RadioButton x:Name="RadClock24" GroupName="Clock" Tag="24" Content="24-hour (22:42)" Style="{StaticResource Pill}" Checked="OnClockChecked"/>
+                                </WrapPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Mascot" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Replace island panels with animated blue eyes." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglMascot" Grid.Column="1" Style="{StaticResource Switch}" Click="OnMascotClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Mascot accessory" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Choose shades or a bow for your mascot." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <ComboBox x:Name="CmbAccessory" Grid.Column="1" Style="{StaticResource Combo}" MinWidth="160" SelectionChanged="OnAccessoryChanged" VerticalAlignment="Center">
+                                    <ComboBoxItem Content="None" Tag="none"/>
+                                    <ComboBoxItem Content="Shades" Tag="shades"/>
+                                    <ComboBoxItem Content="Bow" Tag="bow"/>
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Sleep until tapped" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Sleeping mascot ignores the mouse and wakes with a startle when you tap it." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglDeepSleep" Grid.Column="1" Style="{StaticResource Switch}" Click="OnDeepSleepClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Keep mascot awake" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Never let the mascot fall asleep when idle." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglMascotNeverSleepDisplay" Grid.Column="1" Style="{StaticResource Switch}" Click="OnMascotNeverSleepClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Mascot privacy dots" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Show microphone and camera indicator dots while mascot is active." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglMascotPrivacyDisplay" Grid.Column="1" Style="{StaticResource Switch}" Click="OnMascotPrivacyClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Listening animation" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="What the mascot shows while Nixi listens." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <ComboBox x:Name="CmbListenStyle" Grid.Column="1" Style="{StaticResource Combo}" MinWidth="220" SelectionChanged="OnListenStyleChanged" VerticalAlignment="Center">
+                                    <ComboBoxItem Content="Glowing ring (comets)" Tag="glow"/>
+                                    <ComboBoxItem Content="Ripple glow" Tag="ripple"/>
+                                    <ComboBoxItem Content="Rainbow glow" Tag="rainbow"/>
+                                    <ComboBoxItem Content="Side waves" Tag="waves"/>
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Mascot eye color" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Choose the eye glow color for your mascot." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Tag="#829BFF" Style="{StaticResource EyeSwatch}" Click="OnEyeColorClick" ToolTip="Electric blue"/>
+                                    <Button Tag="#C084FC" Style="{StaticResource EyeSwatch}" Click="OnEyeColorClick" ToolTip="Purple"/>
+                                    <Button Tag="#F472B6" Style="{StaticResource EyeSwatch}" Click="OnEyeColorClick" ToolTip="Pink"/>
+                                    <Button Tag="#34D399" Style="{StaticResource EyeSwatch}" Click="OnEyeColorClick" ToolTip="Emerald"/>
+                                    <Button Tag="#FBBF24" Style="{StaticResource EyeSwatch}" Click="OnEyeColorClick" ToolTip="Amber"/>
+                                    <Button Tag="#F87171" Style="{StaticResource EyeSwatch}" Click="OnEyeColorClick" ToolTip="Coral"/>
+
+                                    <!-- Palette button replacing the raw text box -->
+                                    <Button x:Name="BtnColorPalette" Style="{StaticResource Chip}" Click="OnColorPaletteClick" Margin="10,0,0,0" ToolTip="Open full color palette">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border x:Name="CurrentEyeColorSwatch" Width="14" Height="14" CornerRadius="7" Background="#829BFF" Margin="0,0,8,0" BorderBrush="#FFFFFF" BorderThickness="1.2"/>
+                                            <TextBlock Text="Palette ▾" Foreground="#E8EAF2" FontSize="12" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Palette Popup -->
+                                    <Popup x:Name="PalettePopup" StaysOpen="False" AllowsTransparency="True"
+                                           PlacementTarget="{Binding ElementName=BtnColorPalette}" Placement="Bottom"
+                                           PopupAnimation="Fade" VerticalOffset="6">
+                                        <Border Background="#16181E" BorderBrush="#2A2E38" BorderThickness="1" CornerRadius="12" Padding="14">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="18" ShadowDepth="4" Direction="270" Color="Black" Opacity="0.6"/>
+                                            </Border.Effect>
+                                            <StackPanel Width="216">
+                                                <TextBlock Text="CHOOSE EYE GLOW COLOR" Foreground="#6E7686" FontSize="10.5" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                                <WrapPanel Margin="-3,0">
+                                                    <!-- Row 1: Blues & Cyans -->
+                                                    <Button Tag="#829BFF" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Electric blue" Margin="3"/>
+                                                    <Button Tag="#60A5FA" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Sky blue" Margin="3"/>
+                                                    <Button Tag="#38BDF8" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Cyan" Margin="3"/>
+                                                    <Button Tag="#06B6D4" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Aqua" Margin="3"/>
+                                                    <Button Tag="#2DD4BF" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Teal" Margin="3"/>
+                                                    <Button Tag="#34D399" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Emerald" Margin="3"/>
+
+                                                    <!-- Row 2: Greens & Yellows -->
+                                                    <Button Tag="#4ADE80" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Mint green" Margin="3"/>
+                                                    <Button Tag="#A3E635" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Lime neon" Margin="3"/>
+                                                    <Button Tag="#FACC15" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Bright yellow" Margin="3"/>
+                                                    <Button Tag="#FBBF24" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Amber" Margin="3"/>
+                                                    <Button Tag="#FB923C" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Warm orange" Margin="3"/>
+                                                    <Button Tag="#F97316" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Neon orange" Margin="3"/>
+
+                                                    <!-- Row 3: Reds & Pinks -->
+                                                    <Button Tag="#EF4444" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Bright red" Margin="3"/>
+                                                    <Button Tag="#F87171" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Coral" Margin="3"/>
+                                                    <Button Tag="#FB7185" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Rose" Margin="3"/>
+                                                    <Button Tag="#F472B6" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Pink" Margin="3"/>
+                                                    <Button Tag="#EC4899" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Hot pink" Margin="3"/>
+                                                    <Button Tag="#D946EF" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Fuchsia" Margin="3"/>
+
+                                                    <!-- Row 4: Purples & Specials -->
+                                                    <Button Tag="#C084FC" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Purple" Margin="3"/>
+                                                    <Button Tag="#A855F7" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Deep violet" Margin="3"/>
+                                                    <Button Tag="#9484FA" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Lavender accent" Margin="3"/>
+                                                    <Button Tag="#6366F1" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Indigo" Margin="3"/>
+                                                    <Button Tag="#FFFFFF" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Pure white" Margin="3"/>
+                                                    <Button Tag="#94A3B8" Style="{StaticResource EyeSwatch}" Click="OnPaletteColorClick" ToolTip="Silver glow" Margin="3"/>
+                                                </WrapPanel>
+
+                                                <Separator Background="#2A2E38" Margin="0,10,0,10"/>
+
+                                                <Button Content="Custom spectrum picker..." Style="{StaticResource Chip}" Click="OnSystemColorPickerClick" HorizontalAlignment="Stretch" Margin="0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Island scale" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Adjust pill display size percentage." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <RadioButton x:Name="RadScale80" GroupName="Scale" Tag="0.8" Content="80%" Style="{StaticResource Pill}" Checked="OnScaleChecked"/>
+                                    <RadioButton x:Name="RadScale100" GroupName="Scale" Tag="1.0" Content="100%" Style="{StaticResource Pill}" Checked="OnScaleChecked"/>
+                                    <RadioButton x:Name="RadScale120" GroupName="Scale" Tag="1.2" Content="120%" Style="{StaticResource Pill}" Checked="OnScaleChecked"/>
+                                </WrapPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Island position" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Desktop screen anchor alignment." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <RadioButton x:Name="RadPosLeft" GroupName="Pos" Tag="left" Content="Top left" Style="{StaticResource Pill}" Checked="OnPositionChecked"/>
+                                    <RadioButton x:Name="RadPosCenter" GroupName="Pos" Tag="center" Content="Top center" Style="{StaticResource Pill}" Checked="OnPositionChecked"/>
+                                    <RadioButton x:Name="RadPosRight" GroupName="Pos" Tag="right" Content="Top right" Style="{StaticResource Pill}" Checked="OnPositionChecked"/>
+                                </WrapPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ==================== ABOUT ==================== -->
+                <ScrollViewer x:Name="PaneAbout" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="24,24,24,24">
+                    <StackPanel>
+                        <TextBlock Text="About" Style="{StaticResource PaneTitle}"/>
+                        <TextBlock Text="Nixi Island system information and credits." Style="{StaticResource PaneDesc}"/>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="#1E2128" BorderBrush="#2A2E38" BorderThickness="1" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <Ellipse Width="12" Height="12" Fill="#829BFF"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Nixi Island for Windows" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="Version 1.0 · Akhin (SPARK-REX)" Style="{StaticResource CardDesc}"/>
+                                        <TextBlock x:Name="LblUpdateStatus" Text="" Foreground="#34D399" FontSize="11.5" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Check for updates" Style="{StaticResource Chip}" Click="OnCheckUpdatesClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Creator &amp; repository" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Designed and developed by Akhin (SPARK-REX)." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="GitHub" Tag="https://github.com/SPARK-REX/Dynamic-island" Style="{StaticResource Chip}" Click="OnLinkClick"/>
+                                    <Button Content="Website" Tag="https://github.com/SPARK-REX" Style="{StaticResource Chip}" Click="OnLinkClick"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Anonymous usage telemetry" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Help improve performance and stability reports." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <CheckBox x:Name="TglTelemetry" Grid.Column="1" Style="{StaticResource Switch}" Click="OnTelemetryClick" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Open source acknowledgements" Style="{StaticResource CardTitle}"/>
+                                    <TextBlock Text="Special thanks to the Windows Mica and Acrylic community contributors." Style="{StaticResource CardDesc}"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="MIT License" Foreground="#6E7686" FontSize="12" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
